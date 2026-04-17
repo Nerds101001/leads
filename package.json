@@ -7,7 +7,7 @@
     "build": "echo 'Build complete - static site ready'"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "keywords": ["crm", "dashboard", "ai", "nvidia", "business-intelligence"],
   "author": "LRX Team",
