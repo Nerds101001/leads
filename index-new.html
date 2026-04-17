@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LRX CRM Dashboard — AI-Enhanced Business Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --primary: #1F3864;
+  --secondary: #2E75B6;
+  --success: #538135;
+  --danger: #C00000;
+  --warning: #ED7D31;
+  --info: #00897B;
+  --light: #EEF2F7;
+  --dark: #1a1a2e;
+  --border: #ddd;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--light);
+  color: var(--dark);
+  line-height: 1.6;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+/* UPLOAD SECTION */
+.upload-section {
+  background: white;
+  margin: 2rem;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  border: 1px solid var(--border);
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.upload-card {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.upload-card:hover {
+  border-color: var(--secondary);
+  background: rgba(46, 117, 182, 0.05);
+}
+
+.upload-card.uploaded {
+  border-color: var(--success);
+  background: rgba(83, 129, 53, 0.1);
+  border-style: solid;
+}
+
+.upload-card input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.upload-title {
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.upload-desc {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.upload-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--secondary);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-success:hover {
+  background: #375623;
+}
+
+/* DASHBOARD */
+.dashboard {
+  display: none;
+  margin: 2rem;
+}
+
+.dashboard.active {
+  display: block;
+}
+
+.tabs {
+  display: flex;
+  background: white;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.tab:hover {
+  background: rgba(46, 117, 182, 0.1);
+}
+
+.tab.active {
+  border-bottom-color: var(--warning);
+  background: rgba(46, 117, 182, 0.1);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.tab-content {
+  background: white;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  min-height: 500px;
+}
+
+.tab-pane {
+  display: none;
+  padding: 2rem;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* KPI CARDS */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-left: 4px solid var(--primary);
+  transition: transform 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+}
+
+.kpi-card.success { border-left-color: var(--success); }
+.kpi-card.danger { border-left-color: var(--danger); }
+.kpi-card.warning { border-left-color: var(--warning); }
+.kpi-card.info { border-left-color: var(--info); }
+
+.kpi-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.kpi-desc {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* AI REPORT */
+.ai-section {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.ai-header {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.ai-body {
+  padding: 2rem;
+  min-height: 400px;
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.ai-placeholder {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+}
+
+.ai-placeholder .icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.ai-content {
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+.ai-content h1, .ai-content h2, .ai-content h3 {
+  color: var(--primary);
+  margin: 1.5rem 0 1rem 0;
+}
+
+.ai-content h1 { font-size: 1.8rem; }
+.ai-content h2 { font-size: 1.4rem; }
+.ai-content h3 { font-size: 1.2rem; }
+
+.ai-content ul, .ai-content ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.ai-content li {
+  margin: 0.5rem 0;
+}
+
+.ai-content strong {
+  color: var(--primary);
+}
+
+.ai-content code {
+  background: var(--light);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .header, .upload-section, .dashboard {
+    margin: 1rem;
+  }
+  
+  .upload-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  
+  .ai-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🚀 LRX CRM Dashboard</h1>
+  <p>AI-Enhanced Business Intelligence • Upload your CRM data to generate McKinsey-grade CEO reports</p>
+</div>
+
+<!-- UPLOAD SECTION -->
+<div class="upload-section" id="upload-section">
+  <h2 style="margin-bottom: 1.5rem; color: var(--primary);">📊 Upload Your CRM Data</h2>
+  
+  <div class="upload-grid">
+    <div class="upload-card" id="card-1">
+      <input type="file" id="file-assigned" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(1, 'assigned')">
+      <div class="upload-icon">📋</div>
+      <div class="upload-title">Assigned Lead Report</div>
+      <div class="upload-desc">Main leads file with stages, sources, and salesperson data</div>
+      <div class="upload-status" id="status-1">Click or drag to upload</div>
+    </div>
+    
+    <div class="upload-card" id="card-2">
+      <input type="file" id="file-stagelog" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(2, 'stagelog')">
+      <div class="upload-icon">📈</div>
+      <div class="upload-title">Lead Stage Log Report</div>
+      <div class="upload-desc">Stage progression history and dates by employee</div>
+      <div class="upload-status" id="status-2">Click or drag to upload</div>
+    </div>
+    
+    <div class="upload-card" id="card-3">
+      <input type="file" id="file-custlog" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(3, 'custlog')">
+      <div class="upload-icon">🔄</div>
+      <div class="upload-title">Customer Stage Change Log</div>
+      <div class="upload-desc">Customer stage transitions and interaction dates</div>
+      <div class="upload-status" id="status-3">Click or drag to upload</div>
+    </div>
+  </div>
+  
+  <div style="text-align: center;">
+    <button class="btn btn-primary" id="btn-generate" onclick="generateDashboard()" disabled>
+      ⚡ Generate Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('overview')">📊 Overview</div>
+    <div class="tab" onclick="showTab('funnel')">🔽 Funnel Analysis</div>
+    <div class="tab" onclick="showTab('team')">👥 Team Performance</div>
+    <div class="tab" onclick="showTab('ai-report')">🤖 AI Report</div>
+  </div>
+  
+  <div class="tab-content">
+    <!-- OVERVIEW TAB -->
+    <div class="tab-pane active" id="tab-overview">
+      <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Business Overview</h2>
+      <div class="kpi-grid" id="kpi-overview"></div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+        <div>
+          <h3 style="color: var(--primary); margin-bottom: 1rem;">Stage Distribution</h3>
+          <canvas id="chart-stages" width="400" height="300"></canvas>
+        </div>
+        <div>
+          <h3 style="color: var(--primary); margin-bottom: 1rem;">Lead Sources</h3>
+          <canvas id="chart-sources" width="400" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- FUNNEL TAB -->
+    <div class="tab-pane" id="tab-funnel">
+      <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Conversion Funnel</h2>
+      <div class="kpi-grid" id="kpi-funnel"></div>
+    </div>
+    
+    <!-- TEAM TAB -->
+    <div class="tab-pane" id="tab-team">
+      <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Team Performance</h2>
+      <div class="kpi-grid" id="kpi-team"></div>
+    </div>
+    
+    <!-- AI REPORT TAB -->
+    <div class="tab-pane" id="tab-ai-report">
+      <div class="ai-section">
+        <div class="ai-header">
+          <div>
+            <h2 style="margin: 0;">🤖 AI Business Intelligence Report</h2>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">McKinsey-grade CEO analysis powered by NVIDIA AI</p>
+          </div>
+          <div class="ai-controls">
+            <span class="status-badge" id="ai-status">Ready</span>
+            <button class="btn btn-success" onclick="generateAIReport()" id="btn-ai">
+              ⚡ Generate Report
+            </button>
+          </div>
+        </div>
+        <div class="ai-body" id="ai-body">
+          <div class="ai-placeholder">
+            <div class="icon">🤖</div>
+            <h3>AI Report Generator Ready</h3>
+            <p>Upload your CRM data and click "Generate Report" to create a comprehensive CEO-level business analysis with actionable insights and recommendations.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global variables
+let crmData = {
+  assigned: null,
+  stagelog: null,
+  custlog: null
+};
+
+let uploadedFiles = 0;
+
+// File upload handling
+function handleFileUpload(cardNum, type) {
+  const fileInput = document.getElementById(`file-${type}`);
+  const file = fileInput.files[0];
+  
+  if (!file) return;
+  
+  const card = document.getElementById(`card-${cardNum}`);
+  const status = document.getElementById(`status-${cardNum}`);
+  
+  // Update UI
+  card.classList.add('uploaded');
+  status.textContent = `✅ ${file.name} (${(file.size/1024).toFixed(0)} KB)`;
+  
+  // Load file data
+  loadExcelFile(file, type).then(data => {
+    crmData[type] = data;
+    uploadedFiles++;
+    checkGenerateButton();
+  }).catch(err => {
+    console.error('Error loading file:', err);
+    status.textContent = '❌ Error loading file';
+    card.classList.remove('uploaded');
+  });
+}
+
+function loadExcelFile(file, type) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+        resolve(jsonData);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function checkGenerateButton() {
+  const btn = document.getElementById('btn-generate');
+  if (uploadedFiles > 0) {
+    btn.disabled = false;
+    btn.textContent = `⚡ Generate Dashboard (${uploadedFiles} file${uploadedFiles > 1 ? 's' : ''} loaded)`;
+  }
+}
+
+// Dashboard generation
+function generateDashboard() {
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('dashboard').classList.add('active');
+  
+  renderOverview();
+  renderFunnel();
+  renderTeam();
+}
+
+function renderOverview() {
+  const container = document.getElementById('kpi-overview');
+  const assignedData = crmData.assigned || [];
+  
+  const totalLeads = assignedData.length;
+  const orders = assignedData.filter(lead => 
+    (lead.Stage || '').includes('ORDER') || 
+    (lead.Stage || '').includes('WON')
+  ).length;
+  const conversionRate = totalLeads > 0 ? ((orders / totalLeads) * 100).toFixed(1) : 0;
+  const activeLeads = totalLeads - orders;
+  
+  container.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Total Leads</div>
+      <div class="kpi-value">${totalLeads}</div>
+      <div class="kpi-desc">All opportunities</div>
+    </div>
+    <div class="kpi-card success">
+      <div class="kpi-label">Orders Won</div>
+      <div class="kpi-value">${orders}</div>
+      <div class="kpi-desc">${conversionRate}% conversion</div>
+    </div>
+    <div class="kpi-card warning">
+      <div class="kpi-label">Active Pipeline</div>
+      <div class="kpi-value">${activeLeads}</div>
+      <div class="kpi-desc">In progress</div>
+    </div>
+    <div class="kpi-card info">
+      <div class="kpi-label">Stage Activities</div>
+      <div class="kpi-value">${(crmData.stagelog || []).length}</div>
+      <div class="kpi-desc">Log entries</div>
+    </div>
+  `;
+  
+  // Render charts
+  renderStageChart();
+  renderSourceChart();
+}
+
+function renderStageChart() {
+  const ctx = document.getElementById('chart-stages');
+  if (!ctx) return;
+  
+  const assignedData = crmData.assigned || [];
+  const stageCount = {};
+  
+  assignedData.forEach(lead => {
+    const stage = lead.Stage || 'Unknown';
+    stageCount[stage] = (stageCount[stage] || 0) + 1;
+  });
+  
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(stageCount),
+      datasets: [{
+        data: Object.values(stageCount),
+        backgroundColor: ['#1F3864', '#2E75B6', '#538135', '#ED7D31', '#C00000', '#00897B']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+}
+
+function renderSourceChart() {
+  const ctx = document.getElementById('chart-sources');
+  if (!ctx) return;
+  
+  const assignedData = crmData.assigned || [];
+  const sourceCount = {};
+  
+  assignedData.forEach(lead => {
+    const source = lead.Source || 'Unknown';
+    sourceCount[source] = (sourceCount[source] || 0) + 1;
+  });
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(sourceCount),
+      datasets: [{
+        label: 'Leads',
+        data: Object.values(sourceCount),
+        backgroundColor: '#2E75B6'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+function renderFunnel() {
+  const container = document.getElementById('kpi-funnel');
+  container.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Funnel Analysis</div>
+      <div class="kpi-value">Ready</div>
+      <div class="kpi-desc">Conversion tracking</div>
+    </div>
+  `;
+}
+
+function renderTeam() {
+  const container = document.getElementById('kpi-team');
+  const assignedData = crmData.assigned || [];
+  
+  const repCount = {};
+  assignedData.forEach(lead => {
+    const rep = lead.Salesperson || 'Unknown';
+    repCount[rep] = (repCount[rep] || 0) + 1;
+  });
+  
+  const totalReps = Object.keys(repCount).length;
+  const avgLeadsPerRep = totalReps > 0 ? (assignedData.length / totalReps).toFixed(1) : 0;
+  
+  container.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Sales Reps</div>
+      <div class="kpi-value">${totalReps}</div>
+      <div class="kpi-desc">Active team members</div>
+    </div>
+    <div class="kpi-card info">
+      <div class="kpi-label">Avg Leads/Rep</div>
+      <div class="kpi-value">${avgLeadsPerRep}</div>
+      <div class="kpi-desc">Workload distribution</div>
+    </div>
+  `;
+}
+
+// Tab navigation
+function showTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Update tab content
+  document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+  document.getElementById(`tab-${tabName}`).classList.add('active');
+}
+
+// AI Report Generation
+async function generateAIReport() {
+  const btn = document.getElementById('btn-ai');
+  const status = document.getElementById('ai-status');
+  const body = document.getElementById('ai-body');
+  
+  if (!crmData.assigned && !crmData.stagelog && !crmData.custlog) {
+    alert('Please upload at least one CRM file before generating the AI report.');
+    return;
+  }
+  
+  // Update UI
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Generating...';
+  status.textContent = 'Analyzing...';
+  body.innerHTML = '<div style="text-align: center; padding: 2rem;"><div class="spinner" style="margin: 0 auto 1rem;"></div><p>AI is analyzing your CRM data...</p></div>';
+  
+  try {
+    const response = await fetch('/api/generate-ai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        leadData: crmData.assigned,
+        stageData: crmData.stagelog,
+        custData: crmData.custlog,
+        customPrompt: 'Focus on conversion optimization and team performance'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.report) {
+      // Convert markdown to HTML and display
+      const htmlContent = markdownToHtml(result.report);
+      body.innerHTML = `<div class="ai-content">${htmlContent}</div>`;
+      status.textContent = result.fallback ? 'Local Analysis' : 'Complete';
+    } else {
+      throw new Error('No report generated');
+    }
+    
+  } catch (error) {
+    console.error('AI Report Error:', error);
+    body.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: var(--danger);">
+        <h3>❌ Report Generation Failed</h3>
+        <p>Unable to generate AI report. Please try again or check your connection.</p>
+      </div>
+    `;
+    status.textContent = 'Error';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Generate Report';
+  }
+}
+
+// Simple markdown to HTML converter
+function markdownToHtml(markdown) {
+  return markdown
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^- (.*$)/gim, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/\n/g, '<br>');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('LRX CRM Dashboard initialized');
+});
+</script>
+
+</body>
+</html>

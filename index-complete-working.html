@@ -1,0 +1,2962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LRX Lead Review Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Calibri,Arial,sans-serif;background:#EEF2F7;color:#1a1a2e;min-height:100vh}
+/* BANNER */
+.banner{background:linear-gradient(135deg,#1F3864 0%,#2E75B6 100%);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.banner h1{font-size:17px;font-weight:700;letter-spacing:.4px}
+.banner p{font-size:10px;color:#BDD7EE;margin-top:3px}
+/* UPLOAD */
+.upload-zone{background:#fff;padding:18px 24px;border-bottom:3px solid #1F3864;display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+.upload-box{display:flex;flex-direction:column;gap:5px;min-width:210px}
+.upload-box label{font-size:10px;font-weight:700;color:#1F3864;text-transform:uppercase;letter-spacing:.4px}
+.upload-box input[type=file]{font-size:11px;padding:5px;border:1.5px dashed #2E75B6;border-radius:4px;background:#F0F6FF;cursor:pointer;width:100%}
+.upload-box .fname{font-size:10px;color:#538135;font-weight:700;min-height:14px}
+.btn-load{padding:9px 22px;background:#1F3864;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;align-self:flex-end;transition:background .15s}
+.btn-load:hover{background:#2E75B6}.btn-load:disabled{background:#aaa;cursor:not-allowed}#btn-load:disabled{opacity:.5;cursor:not-allowed}
+.status-bar{background:#E8F4E8;border:1px solid #538135;color:#375623;padding:8px 16px;font-size:11px;font-weight:700;display:none;margin:8px 24px;border-radius:4px}
+.status-bar.err{background:#FFE8E8;border-color:#C00000;color:#7b0000}
+/* TABS */
+.tabs{display:flex;gap:0;background:#1F3864;padding:0 20px;overflow-x:auto;flex-wrap:nowrap}
+.tab-btn{padding:10px 16px;font-size:11px;font-weight:700;color:#BDD7EE;background:transparent;border:none;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;font-family:Calibri,Arial,sans-serif}
+.tab-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
+.tab-btn.active{color:#fff;border-bottom:3px solid #ED7D31;background:rgba(255,255,255,.1)}
+/* CONTENT */
+.content{padding:14px 18px;max-width:1440px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpi-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi-card{border-radius:5px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.12);cursor:pointer;transition:transform .15s}
+.kpi-card:hover{transform:translateY(-2px)}
+.kpi-label{padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:.5px;color:#fff;text-align:center;text-transform:uppercase}
+.kpi-value{padding:10px 8px 4px;font-size:24px;font-weight:700;text-align:center;color:#fff}
+.kpi-sub{padding:0 8px 8px;font-size:9px;text-align:center;color:rgba(255,255,255,.8);font-style:italic}
+.navy{background:#1F3864}.steel{background:#2E75B6}.green-d{background:#375623}.green-m{background:#538135}
+.red-d{background:#C00000}.orange-m{background:#ED7D31}.teal-m{background:#00897B}.gold-m{background:#BF8F00}.purple-m{background:#7030A0}
+/* SECTION HEADER */
+.sec-hdr{background:#1F3864;color:#fff;font-size:11px;font-weight:700;padding:8px 14px;border-radius:4px 4px 0 0;display:flex;justify-content:space-between;align-items:center}
+.sec-hdr span{font-size:9px;color:#BDD7EE;font-weight:400}
+/* CHARTS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-card{background:#fff;border-radius:0 0 5px 5px;border:1px solid #ddd;border-top:none;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.chart-card-full{background:#fff;border-radius:0 0 5px 5px;border:1px solid #ddd;border-top:none;padding:14px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.chart-wrap{position:relative;width:100%}
+.chart-block{margin-bottom:12px}
+/* TABLES */
+.tbl-wrap{overflow-x:auto;background:#fff;border:1px solid #ddd;border-top:none;border-radius:0 0 5px 5px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:12px;max-height:400px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{background:#1F3864;color:#fff;padding:7px 9px;text-align:center;font-size:10px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:2}
+thead th:first-child{text-align:left}
+tbody td{padding:5px 9px;border-bottom:.5px solid #E8ECF0;text-align:center;vertical-align:middle}
+tbody td:first-child{text-align:left;font-weight:600}
+tbody tr:nth-child(even) td{background:#F8FAFC}
+tbody tr:hover td{background:#EEF4FF;cursor:pointer}
+/* BADGES */
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;white-space:nowrap}
+.b-green{background:#E2EFDA;color:#375623}.b-blue{background:#DDEEFF;color:#1F3864}
+.b-yellow{background:#FFF2CC;color:#7F6000}.b-red{background:#FFCCCC;color:#C00000}
+.b-crit{background:#C00000;color:#fff}.b-star{background:#FFD700;color:#333}
+/* FILTER BAR */
+.fbar{background:#fff;padding:9px 16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:12px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid #e0e0e0}
+.fbar select{padding:4px 8px;font-size:11px;border:1.5px solid #2E75B6;border-radius:3px;background:#fff;color:#1F3864;cursor:pointer;min-width:130px}
+.fbar label{font-size:10px;font-weight:700;color:#1F3864;text-transform:uppercase}
+.btn-reset{padding:4px 12px;background:#C00000;color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer}
+/* FUNNEL */
+.fn-detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.fn-detail-card{background:#fff;border-radius:6px;border:1px solid #ddd;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:transform .15s}
+.fn-detail-card:hover{transform:translateY(-2px)}
+.fn-detail-card h3{margin:0 0 10px 0;font-size:11px;color:#1F3864;border-bottom:2.5px solid #BDD7EE;padding-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.fn-detail-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f4f8;font-size:11px}
+.fn-detail-row:last-child{border-bottom:none}
+.fn-label{color:#555;font-weight:600}
+.fn-value{color:#1F3864;font-weight:700}
+.funnel-row{display:grid;grid-template-columns:180px 70px 55px 1fr;gap:8px;align-items:center;margin-bottom:5px;padding:4px;border-radius:3px;cursor:pointer;transition:background .1s}
+.funnel-row:hover{background:#EEF4FF}
+.funnel-lbl{font-size:11px;font-weight:700;color:#1F3864}
+.funnel-cnt{font-size:12px;font-weight:700;text-align:right}
+.funnel-pct{font-size:10px;color:#666;text-align:right}
+.funnel-bar-wrap{height:22px;background:#EEF2F7;border-radius:3px;overflow:hidden}
+.funnel-bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-size:9px;color:#fff;font-weight:700;min-width:4px;transition:width .6s ease}
+/* DRILL PANEL */
+.drill-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;overflow-y:auto}
+.drill-overlay.open{display:block}
+.drill-panel{background:#fff;margin:20px auto;max-width:1300px;border-radius:8px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.drill-header{background:linear-gradient(135deg,#1F3864,#2E75B6);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+.drill-header h2{font-size:16px;font-weight:700}
+.drill-header p{font-size:10px;color:#BDD7EE;margin-top:3px}
+.drill-close{background:#C00000;color:#fff;border:none;border-radius:4px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer}
+.drill-body{padding:18px}
+/* ALERTS */
+.alert{padding:8px 14px;border-radius:3px;margin-bottom:8px;font-size:11px;border-left:4px solid;display:flex;gap:8px;align-items:flex-start}
+.alert-r{background:#FFF0F0;color:#7b0000;border-color:#C00000}
+.alert-g{background:#F0FFF4;color:#1a5c2a;border-color:#538135}
+.alert-y{background:#FFFDE7;color:#5c4300;border-color:#BF8F00}
+.alert-b{background:#EEF4FF;color:#1F3864;border-color:#2E75B6}
+/* CEO REPORT STYLES */
+.ceo-section{background:#fff;border-radius:5px;padding:18px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.06);border:1px solid #ddd}
+.ceo-section h3{font-size:13px;font-weight:700;color:#1F3864;border-bottom:2px solid #BDD7EE;padding-bottom:8px;margin-bottom:12px}
+.action-card{border-radius:4px;padding:10px 14px;margin-bottom:8px;border-left:4px solid}
+.action-imm{background:#FFF0F0;border-color:#C00000}.action-urg{background:#FFFDE7;border-color:#BF8F00}.action-bld{background:#F0FFF4;border-color:#538135}.action-trn{background:#EEF4FF;border-color:#2E75B6}
+.action-card .tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.action-card .act-title{font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:3px}
+.action-card .act-detail{font-size:10px;color:#555}
+.meeting-section{background:#F8FAFC;border:1px solid #ddd;border-radius:4px;padding:12px;margin-bottom:10px}
+.meeting-section h4{font-size:11px;font-weight:700;color:#1F3864;margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px}
+/* CLICKABLE SOURCE CARDS */
+.src-card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.src-card{background:#fff;border-radius:5px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.1);cursor:pointer;transition:all .2s;border:2px solid transparent;text-align:center}
+.src-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.15);border-color:#2E75B6}
+.src-card .src-name{font-size:12px;font-weight:700;color:#1F3864;margin-bottom:6px}
+.src-card .src-vol{font-size:22px;font-weight:700;color:#2E75B6}
+.src-card .src-conv{font-size:10px;margin-top:4px}
+.src-card .src-hint{font-size:9px;color:#888;margin-top:4px;font-style:italic}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}.src-card-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* MULTI-SELECT */
+.ms-wrap{position:relative;display:inline-block}
+.ms-btn{padding:4px 22px 4px 7px;font-size:11px;border:1.5px solid #2E75B6;border-radius:3px;background:#fff;color:#1F3864;cursor:pointer;min-width:110px;text-align:left;position:relative;font-family:Calibri,Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.ms-btn::after{content:'▾';position:absolute;right:5px;top:50%;transform:translateY(-50%);font-size:9px;color:#2E75B6}
+.ms-drop{display:none;position:absolute;top:100%;left:0;background:#fff;border:1.5px solid #2E75B6;border-top:none;border-radius:0 0 4px 4px;z-index:600;max-height:220px;overflow-y:auto;min-width:190px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.ms-drop.open{display:block}
+.ms-drop label{display:flex;align-items:center;gap:6px;padding:5px 10px;font-size:11px;cursor:pointer;border-bottom:.5px solid #EEF2F7;color:#1F3864;font-weight:400}
+.ms-drop label:hover{background:#EEF4FF}
+.ms-drop input[type=checkbox]{cursor:pointer;accent-color:#2E75B6}
+.ms-search{width:100%;padding:5px 8px;border:none;border-bottom:1px solid #EEF2F7;font-size:11px;font-family:Calibri,Arial,sans-serif;outline:none}
+.ms-acts{display:flex;border-bottom:1px solid #EEF2F7}
+.ms-acts button{flex:1;padding:3px;font-size:9px;border:none;cursor:pointer;font-family:Calibri,Arial,sans-serif;background:#EEF4FF;color:#1F3864;font-weight:700}
+.ms-acts button:hover{background:#BDD7EE}
+/* BANNER PILLS */
+.banner-pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bpill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:6px 12px;text-align:center;cursor:pointer;min-width:90px;transition:all .15s}
+.bpill:hover{background:rgba(255,255,255,.28);transform:translateY(-1px)}
+.bpill .bv{font-size:16px;font-weight:700;color:#fff;line-height:1.2}
+.bpill .bl{font-size:8px;color:#BDD7EE;letter-spacing:.3px;text-transform:uppercase;margin-top:1px}
+.bpill .bs{font-size:8px;color:rgba(255,255,255,.65);margin-top:1px}
+/* GLOBAL FILTER BAR */
+.gfbar{background:#fff;padding:8px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:3px solid #1F3864;position:sticky;top:0;z-index:200;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.gfbar label{font-size:9px;font-weight:700;color:#1F3864;text-transform:uppercase;white-space:nowrap}
+.gfbar select{padding:4px 7px;font-size:11px;border:1.5px solid #2E75B6;border-radius:3px;background:#fff;color:#1F3864;cursor:pointer;min-width:110px;font-family:Calibri,Arial,sans-serif}
+.gfbar select:focus{outline:none;border-color:#1F3864}
+.gf-group{display:flex;align-items:center;gap:5px}
+.gbadge{display:none;background:#ED7D31;color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700}
+.gbadge.on{display:inline-block}
+.gcount{font-size:10px;color:#1F3864;font-weight:700;padding:3px 9px;background:#BDD7EE;border-radius:10px}
+/* POPUP */
+.popup-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;padding:16px}
+.popup-ov.open{display:flex}
+.popup-box{background:#fff;border-radius:8px;max-width:900px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.popup-hdr{background:linear-gradient(135deg,#1F3864,#2E75B6);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.popup-hdr h3{font-size:13px;font-weight:700;margin:0}
+.popup-body{padding:16px;overflow-y:auto;flex:1}
+.popup-close{background:#C00000;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif}
+/* TABLE CONTROLS */
+.tbl-controls{background:#F8FAFC;border:1px solid #ddd;border-bottom:none;border-radius:4px 4px 0 0;padding:6px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tbl-search{padding:4px 8px;font-size:10px;border:1px solid #BDD7EE;border-radius:3px;font-family:Calibri,Arial,sans-serif;min-width:150px}
+.tbl-sort-lbl{font-size:9px;color:#888}
+.btn-export{padding:4px 10px;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;font-family:Calibri,Arial,sans-serif}
+.btn-csv{background:#217346;color:#fff}
+.btn-pdf{background:#C00000;color:#fff}
+/* TAT STAGE CARDS */
+.tat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:12px}
+.tat-card{background:#fff;border-radius:5px;border:1px solid #ddd;padding:10px 8px;text-align:center;cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);border-color:#2E75B6}
+.tat-card .tc-lbl{font-size:8px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.tat-card .tc-val{font-size:18px;font-weight:700;color:#1F3864}
+.tat-card .tc-sub{font-size:8px;color:#aaa;margin-top:2px}
+/* --- LIVE SYNC & LOGIN UI --- */
+#login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.92);z-index:9900;display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+.login-card{background:#fff;padding:32px;border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,0.12);width:360px;text-align:center;border:1px solid #e1e7ef}
+.login-card h2{margin:0 0 10px;color:#1F3864;font-size:20px;font-weight:800}
+.login-card p{color:#64748b;font-size:13px;margin-bottom:24px}
+.login-field{margin-bottom:16px;text-align:left}
+.login-field label{display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.login-field input,.login-field select{width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:inherit;transition:border-color 0.2s}
+.login-field input:focus,.login-field select:focus{outline:none;border-color:#2E75B6}
+.btn-login{width:100%;background:#2E75B6;color:#fff;border:none;padding:12px;border-radius:6px;font-weight:700;cursor:pointer;font-size:14px;margin-top:10px;transition:background 0.2s;font-family:inherit}
+.btn-login:hover{background:#1F3864}
+.login-error{color:#C00000;font-size:12px;margin-top:12px;font-weight:600;min-height:18px}
+.sync-badge{display:inline-flex;align-items:center;gap:6px;background:#f0f7ff;border:1px solid #2E75B6;color:#2E75B6;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:12px}
+.sync-dot{width:6px;height:6px;background:#2E75B6;border-radius:50%;animation:syncpulse 2s infinite}
+@keyframes syncpulse{0%{opacity:0.3}50%{opacity:1}100%{opacity:0.3}}
+#sync-status{position:fixed;bottom:20px;right:20px;background:#1F3864;color:#fff;padding:10px 20px;border-radius:8px;display:none;z-index:9000;box-shadow:0 4px 12px rgba(0,0,0,0.2);align-items:center;gap:10px;font-size:12px}
+.spinner{width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.premium-feature{background:linear-gradient(45deg,#FFD700,#FFA500);color:#333;padding:2px 8px;border-radius:12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-left:8px;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.btn-premium{background:linear-gradient(45deg,#FFD700,#FFA500);color:#333;border:none;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-size:12px;transition:all 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.2);font-family:inherit}
+.btn-premium:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.3)}
+.btn-premium:disabled{background:#ccc;color:#666;cursor:not-allowed;box-shadow:none}
+.pulse{width:8px;height:8px;background:#538135;border-radius:50%;margin-right:8px;display:inline-block;box-shadow:0 0 0 rgba(83,129,53,0.4);animation:livepulse 2s infinite}
+@keyframes livepulse{0%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(83,129,53,0.7)}70%{transform:scale(1);box-shadow:0 0 0 10px rgba(83,129,53,0)}100%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(83,129,53,0)}}
+/* Enterprise Sync Overlay */
+#sync-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(31,56,100,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:99999}
+.sync-card{background:#fff;border-radius:16px;padding:40px;width:450px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2)}
+.sync-card h2{color:#1F3864;margin-bottom:20px;font-size:22px;font-weight:800}
+.sync-progress-bar{height:8px;background:#EEF2F7;border-radius:4px;overflow:hidden;margin:25px 0;position:relative}
+.sync-fill{height:100%;width:0%;background:linear-gradient(90deg,#1F3864,#2E75B6);transition:width 0.4s cubic-bezier(0.1,0.7,0.1,1)}
+.sync-status-msg{font-size:14px;font-weight:600;color:#555;min-height:20px}
+.sync-icon{font-size:40px;margin-bottom:15px;display:block;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+</style>
+</head>
+<body>
+<!-- ═══ CRM LOGIN OVERLAY ═══ -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div style="font-size:32px;margin-bottom:12px">📡</div>
+    <h2>CRM Live Sync</h2>
+    <p>Enter your credentials to connect directly to the Live CRM API.</p>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="crm-user" placeholder="Enter CRM username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="crm-pass" placeholder="••••••••">
+    </div>
+    <div class="login-field">
+      <label>Sync Timeline (Data Duration)</label>
+      <select id="crm-timeline">
+        <option value="1">Last 1 Month</option>
+        <option value="2">Last 2 Months</option>
+        <option value="3">Last 3 Months</option>
+        <option value="6">Last 6 Months</option>
+        <option value="12">Last 12 Months (1 Year)</option>
+        <option value="24">Last 24 Months (2 Years)</option>
+        <option value="60">Last 60 Months (5 Years)</option>
+        <option value="200">All Time (Since 2010)</option>
+      </select>
+    </div>
+    <button class="btn-login" onclick="crmLogin()">Connect Now</button>
+    <div id="login-err" class="login-error"></div>
+    <div style="margin-top:16px;font-size:11px;color:#94a3b8">Your connection is secure and encrypted.</div>
+    <button onclick="hideLogin()" style="margin-top:12px;background:none;color:#64748b;border:none;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ ENTERPRISE SYNC OVERLAY ═══ -->
+<div id="sync-overlay">
+  <div class="sync-card">
+    <span class="sync-icon">🛰️</span>
+    <h2>Data Command Center</h2>
+    <div class="sync-status-msg" id="sync-msg">Initializing Connection...</div>
+    <div class="sync-progress-bar">
+      <div id="sync-fill" class="sync-fill"></div>
+    </div>
+    <div style="font-size:11px;color:#888;font-weight:500">Please keep this window open until sync completes</div>
+  </div>
+</div>
+
+<!-- ═══ NEW UPLOAD SCREEN ═══ -->
+
+<div id="upload-screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#1F3864 0%,#2E75B6 60%,#1F5E5F 100%)">
+  <div style="background:#fff;border-radius:16px;padding:40px;max-width:860px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.35)">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:36px;margin-bottom:10px">⚡</div>
+      <h1 style="font-size:22px;font-weight:700;color:#1F3864;margin-bottom:6px">Sales Intelligence Dashboard</h1>
+      <p style="font-size:12px;color:#888">Upload 3 Excel files OR connect Google Sheet → instant fully interactive CEO dashboard</p>
+    </div>
+    <!-- UPLOAD TAB SWITCHER -->
+    <div style="display:flex;margin-bottom:24px;border:2px solid #1F3864;border-radius:8px;overflow:hidden">
+      <button id="utab-file" onclick="switchUploadTab('file')" style="flex:1;padding:11px;font-size:12px;font-weight:700;background:#1F3864;color:#fff;border:none;cursor:pointer;font-family:Calibri,Arial,sans-serif;transition:all .15s">📁 Upload Excel Files</button>
+      <button id="utab-gs" onclick="switchUploadTab('gs')" style="flex:1;padding:11px;font-size:12px;font-weight:700;background:#EEF4FF;color:#1F3864;border:none;cursor:pointer;font-family:Calibri,Arial,sans-serif;transition:all .15s">📊 Google Sheet URL</button>
+    </div>
+    <!-- FILE UPLOAD TAB -->
+    <div id="utab-file-content">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+        <!-- Slot 1 -->
+        <div id="slot1" style="border:2px dashed #BDD7EE;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;position:relative" ondragover="event.preventDefault()" ondrop="handleDrop(event,1)">
+          <input type="file" id="f-assigned" accept=".xlsx,.xls,.csv" onchange="markFile('f-assigned','n-assigned',1)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+          <div style="font-size:32px;margin-bottom:8px">📋</div>
+          <div style="font-size:11px;font-weight:700;color:#1F3864;margin-bottom:4px">Assigned Lead Report</div>
+          <div style="font-size:10px;color:#888;margin-bottom:6px">Main leads file — stage, source, salesperson</div>
+          <div id="n-assigned" style="font-size:10px;font-weight:700;color:#666">Click or drag here</div>
+        </div>
+        <!-- Slot 2 -->
+        <div id="slot2" style="border:2px dashed #BDD7EE;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;position:relative" ondragover="event.preventDefault()" ondrop="handleDrop(event,2)">
+          <input type="file" id="f-stagelog" accept=".xlsx,.xls,.csv" onchange="markFile('f-stagelog','n-stagelog',2)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+          <div style="font-size:32px;margin-bottom:8px">📈</div>
+          <div style="font-size:11px;font-weight:700;color:#1F3864;margin-bottom:4px">Lead Stage Log Report</div>
+          <div style="font-size:10px;color:#888;margin-bottom:6px">Stage progression dates by employee</div>
+          <div id="n-stagelog" style="font-size:10px;font-weight:700;color:#666">Click or drag here</div>
+        </div>
+        <!-- Slot 3 -->
+        <div id="slot3" style="border:2px dashed #BDD7EE;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;position:relative" ondragover="event.preventDefault()" ondrop="handleDrop(event,3)">
+          <input type="file" id="f-custlog" accept=".xlsx,.xls,.csv" onchange="markFile('f-custlog','n-custlog',3)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+          <div style="font-size:32px;margin-bottom:8px">🔄</div>
+          <div style="font-size:11px;font-weight:700;color:#1F3864;margin-bottom:4px">Customer Stage Change Log</div>
+          <div style="font-size:10px;color:#888;margin-bottom:6px">Customer stage transitions and dates</div>
+          <div id="n-custlog" style="font-size:10px;font-weight:700;color:#666">Click or drag here</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:10px 12px;background:linear-gradient(135deg,#EEF4FF,#f0f7ff);border-radius:8px;border:1px solid #BDD7EE">
+        <div style="font-size:11px;color:#1F3864;font-weight:600">📡 <span id="crm-status-text">Want live data? <a href="#" onclick="showLogin();return false;" style="color:#2E75B6;text-decoration:underline">Login to CRM</a></span></div>
+        <button class="btn-premium" onclick="showLogin()">🔴 Live Sync Login</button>
+      </div>
+      <button id="btn-load" onclick="loadAll()" disabled style="width:100%;padding:14px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;opacity:.5;transition:all .2s">⚡ Generate Dashboard</button>
+    </div>
+    <!-- GOOGLE SHEET TAB -->
+    <div id="utab-gs-content" style="display:none">
+      <div style="background:#EEF4FF;border-radius:8px;padding:14px;font-size:11px;color:#1F3864;margin-bottom:16px;line-height:1.7">
+        <b>Download CSV from each tab:</b> Google Sheet → click <b>Assigned</b> tab → File → Download → CSV. Repeat for <b>LeadStage</b> and <b>CustomerStage</b>. Upload the 3 CSVs above.<br>
+        <b>OR</b> publish each tab: File → Share → Publish to web → select tab → CSV → copy URL.
+      </div>
+      <input id="gs-url1" placeholder="Tab 1 — Assigned Lead Report (published CSV URL)" style="width:100%;padding:10px 13px;border:1.5px solid #BDD7EE;border-radius:6px;font-size:11px;font-family:Calibri,Arial,sans-serif;margin-bottom:8px">
+      <input id="gs-url2" placeholder="Tab 2 — Lead Stage Log (published CSV URL)" style="width:100%;padding:10px 13px;border:1.5px solid #BDD7EE;border-radius:6px;font-size:11px;font-family:Calibri,Arial,sans-serif;margin-bottom:8px">
+      <input id="gs-url3" placeholder="Tab 3 — Customer Stage Change Log (published CSV URL)" style="width:100%;padding:10px 13px;border:1.5px solid #BDD7EE;border-radius:6px;font-size:11px;font-family:Calibri,Arial,sans-serif;margin-bottom:12px">
+      <button onclick="loadFromGS()" style="width:100%;padding:14px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif">⚡ Connect & Build Dashboard</button>
+    </div>
+    <!-- PROGRESS -->
+    <div id="pbar-wrap" style="display:none;margin-top:14px">
+      <div style="height:6px;background:#EEF2F7;border-radius:3px;overflow:hidden"><div id="pbar-fill" style="height:100%;background:linear-gradient(90deg,#1F3864,#2E75B6);width:0;transition:width .3s"></div></div>
+      <div id="status-bar" style="font-size:11px;font-weight:700;color:#1F3864;margin-top:6px;text-align:center"></div>
+    </div>
+    <!-- ERROR -->
+    <div id="err-msg" style="display:none;background:#FFF0F0;border:1px solid #C00000;border-radius:6px;padding:10px 14px;font-size:11px;color:#C00000;margin-top:10px"></div>
+    <!-- HEADER GUIDE -->
+    <div style="margin-top:20px;border-top:1px solid #EEF2F7;padding-top:14px">
+      <p style="font-size:10px;font-weight:700;color:#1F3864;margin-bottom:8px">📌 Required headers (auto-detected from row 1 or 2):</p>
+      <div style="margin-bottom:6px"><b style="font-size:9px;color:#C00000">File 1:</b>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">LEAD AID</span>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">EMP NAME</span>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">STAGE</span>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">LEAD QUERY TIME</span>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">LEAD CREATED ON</span>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">LEAD PRODUCT NAME</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">LEAD SOURCE</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">LEAD STATE</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">LEAD CITY</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">REMARKS</span>
+      </div>
+      <div><b style="font-size:9px;color:#2E75B6">File 2 & 3:</b>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">EMP NAME</span>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">COMP NAME</span>
+        <span style="background:#1F3864;color:#BDD7EE;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">ASSIGNED DATE</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">INTRODUCTION</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">SAMPLE</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">QUOTATION</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">ORDER</span>
+        <span style="background:#EEF4FF;color:#1F3864;font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;font-family:monospace">DROPPED</span>
+      </div>
+      <p style="font-size:9px;color:#888;margin-top:6px">Dark blue = required &nbsp;|&nbsp; Light blue = optional</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD BANNER ═══ -->
+<div class="banner" id="dashboard-banner" style="display:none;flex-wrap:wrap">
+  <div>
+    <h1>⚡ LRX Lead Review Portal</h1>
+    <p id="banner-sub" style="display:inline-block">Live Intelligence Dashboard</p>
+    <div id="sync-indicator" style="display:none;align-items:center;font-size:11px;color:#fff;background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:20px;margin-top:6px;width:fit-content">
+      <span class="pulse"></span> <span id="status-text">Syncing...</span>
+    </div>
+  </div>
+  <div class="banner-pills" id="banner-pills"></div>
+  <button onclick="goBackToUpload()" style="padding:6px 14px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;white-space:nowrap">↩ New Data</button>
+</div>
+
+<!-- ═══ GLOBAL FILTER BAR ═══ -->
+<div class="gfbar" id="gfbar" style="display:none">
+  <div class="gf-group"><label>📅 Month</label><select id="gf-month" onchange="applyGlobalFilters()"><option value="">All Months</option></select></div>
+  <div class="gf-group"><label>👤 Rep</label>
+    <div class="ms-wrap" id="ms-rep-wrap">
+      <button class="ms-btn" id="ms-rep-btn" onclick="toggleMS('rep')">All Reps</button>
+      <div class="ms-drop" id="ms-rep-drop">
+        <input class="ms-search" placeholder="Search rep..." oninput="filterMSOpts('rep',this.value)">
+        <div class="ms-acts"><button onclick="msAll('rep')">All</button><button onclick="msNone('rep')">None</button></div>
+        <div id="ms-rep-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="gf-group"><label>📡 Source</label>
+    <div class="ms-wrap" id="ms-src-wrap">
+      <button class="ms-btn" id="ms-src-btn" onclick="toggleMS('src')">All Sources</button>
+      <div class="ms-drop" id="ms-src-drop">
+        <div class="ms-acts"><button onclick="msAll('src')">All</button><button onclick="msNone('src')">None</button></div>
+        <div id="ms-src-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="gf-group"><label>📦 Product</label><select id="gf-prod" onchange="applyGlobalFilters()"><option value="">All Products</option></select></div>
+  <div class="gf-group"><label>🗺 State</label><select id="gf-state" onchange="applyGlobalFilters()"><option value="">All States</option></select></div>
+  <div class="gf-group"><label>🔽 Stage</label>
+    <div class="ms-wrap" id="ms-stg-wrap">
+      <button class="ms-btn" id="ms-stg-btn" onclick="toggleMS('stg')">All Stages</button>
+      <div class="ms-drop" id="ms-stg-drop">
+        <div class="ms-acts"><button onclick="msAll('stg')">All</button><button onclick="msNone('stg')">None</button></div>
+        <div id="ms-stg-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="gf-group"><label>📋 Log</label>
+    <select id="gf-log" onchange="applyGlobalFilters()" style="padding:4px 7px;font-size:11px;border:1.5px solid #2E75B6;border-radius:3px;background:#fff;color:#1F3864;cursor:pointer;font-family:Calibri,Arial,sans-serif">
+      <option value="both">Both Logs</option>
+      <option value="stage">Lead Stage Log</option>
+      <option value="cust">Customer Stage Log</option>
+    </select>
+  </div>
+  <button class="btn-reset" onclick="resetGlobalFilters()">✕ Reset All</button>
+  <span class="gbadge" id="gbadge">Filtered</span>
+  <span class="gcount" id="gcount">0 leads</span>
+  <button class="btn-export btn-pdf" onclick="printDashboard()" style="margin-left:auto">🖨 Print/PDF</button>
+  <button class="btn-export btn-csv" onclick="exportAllCSV()">⬇ Export CSV</button>
+</div>
+
+<!-- POPUP OVERLAY -->
+<div class="popup-ov" id="popup-ov" onclick="if(event.target===this)closePopup()">
+  <div class="popup-box">
+    <div class="popup-hdr">
+      <h3 id="popup-title">—</h3>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn-export btn-csv" onclick="exportPopupCSV()" style="padding:5px 12px;font-size:10px;background:#217346;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:Calibri,Arial,sans-serif">⬇ Export CSV</button>
+        <button class="btn-export btn-pdf" onclick="printPopup()" style="padding:5px 12px;font-size:10px;background:#ED7D31;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:Calibri,Arial,sans-serif">🖨 Print/PDF</button>
+        <button class="popup-close" onclick="closePopup()">✕ Close</button>
+      </div>
+    </div>
+    <div class="popup-body" id="popup-body"></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs" id="tabs" style="display:none">
+  <button class="tab-btn active" onclick="showPage('overview',this)">📊 Overview</button>
+  <button class="tab-btn" onclick="showPage('funnel',this)">🔽 Funnel</button>
+  <button class="tab-btn" onclick="showPage('sources',this)">📡 Sources</button>
+  <button class="tab-btn" onclick="showPage('team',this)">👥 Sales Team</button>
+  <button class="tab-btn" onclick="showPage('geo',this)">🗺 Geography</button>
+  <button class="tab-btn" onclick="showPage('products',this)">📦 Products</button>
+  <button class="tab-btn" onclick="showPage('leads',this)">📋 Leads & Logs</button>
+  <button class="tab-btn" id="tab-ceo" onclick="showPage('ceo',this)" style="display:none">🏆 CEO Report</button>
+</div>
+
+<div class="content" id="main-content" style="display:none">
+
+<!-- OVERVIEW -->
+<div id="page-overview" class="page active">
+  <div style="margin-bottom:10px">
+    <div class="kpi-grid" id="ov-kpis" style="display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:6px"></div>
+    <!-- Static controls for stagnant/noprogress - outside dynamic innerHTML so values persist -->
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:10px">
+      <div></div><div></div><div></div><div></div>
+      <div style="display:flex;gap:4px;align-items:center;justify-content:center;background:rgba(191,143,0,.15);border-radius:4px;padding:4px 6px">
+        <span style="font-size:9px;color:#7F6000;font-weight:700">Stagnant:</span>
+        <select id="stagnant-days-sel" onchange="renderOvKpis()" style="font-size:10px;padding:2px 4px;border:1px solid #BF8F00;border-radius:3px;background:#fff;color:#7F6000;cursor:pointer;font-family:Calibri,Arial,sans-serif">
+          <option value="30">30 days</option><option value="60" selected>60 days</option><option value="90">90 days</option>
+        </select>
+        <select id="stagnant-src-sel" onchange="renderOvKpis()" style="font-size:10px;padding:2px 4px;border:1px solid #BF8F00;border-radius:3px;background:#fff;color:#7F6000;cursor:pointer;font-family:Calibri,Arial,sans-serif">
+          <option value="f1">Assigned</option>
+          <option value="f2">Stage Log</option>
+          <option value="f3">Cust Log</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;justify-content:center;background:rgba(112,48,160,.12);border-radius:4px;padding:4px 6px">
+        <span style="font-size:9px;color:#4A0E8F;font-weight:700">No Prog:</span>
+        <select id="noprog-src-sel" onchange="renderOvKpis()" style="font-size:10px;padding:2px 4px;border:1px solid #7030A0;border-radius:3px;background:#fff;color:#4A0E8F;cursor:pointer;font-family:Calibri,Arial,sans-serif">
+          <option value="f1">Assigned</option>
+          <option value="f2">Stage Log</option>
+          <option value="f3">Cust Log</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="chart-block" style="margin-bottom:12px">
+    <div class="sec-hdr">
+      Stage TAT Cards — Avg days from Assigned Date to each stage
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:9px;color:#BDD7EE">Source:</span>
+        <select id="tat-source" onchange="var gfl=document.getElementById('gf-log');if(gfl)gfl.value=this.value;renderTATCards()" style="padding:3px 7px;font-size:9px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;border-radius:3px;font-family:Calibri,Arial,sans-serif">
+          <option value="both">Both Logs</option>
+          <option value="stage">Lead Stage Log</option>
+          <option value="cust">Customer Stage Log</option>
+        </select>
+        <span style="font-size:9px;color:#BDD7EE">Click any card to see details</span>
+      </div>
+    </div>
+    <div class="chart-card-full" style="padding:12px">
+      <div class="tat-grid" id="tat-cards"></div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px">
+    <button class="btn-export btn-csv" onclick="exportTableCSV('ov-kpis','overview_kpis')">⬇ Export CSV</button>
+    <button class="btn-export btn-pdf" onclick="printSection('page-overview')">🖨 Print</button>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-block">
+      <div class="sec-hdr">Monthly Lead Volume & Orders <span>bar = leads, line = orders</span></div>
+      <div class="chart-card"><div class="chart-wrap" style="height:230px"><canvas id="c-monthly"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Stage Distribution <span>click segment to filter</span></div>
+      <div class="chart-card"><div class="chart-wrap" style="height:230px"><canvas id="c-stage-donut"></canvas></div></div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-block">
+      <div class="sec-hdr">Top Salespersons by Lead Volume</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:250px"><canvas id="c-sp-vol"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Lead Source Breakdown <span>click a source card below for drill-down</span></div>
+      <div class="chart-card"><div class="chart-wrap" style="height:250px"><canvas id="c-src-pie"></canvas></div></div>
+    </div>
+  </div>
+  <div class="chart-grid" style="margin-bottom:12px">
+    <div class="chart-block">
+      <div class="sec-hdr">📡 Source Performance <span>Leads (bar) vs Conv% (line) · click bar to drill-down</span></div>
+      <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="c-ov-src-bar"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">🗺 Top Geography / States <span>Leads (bar) vs Conv% (line) · click bar for popup</span></div>
+      <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="c-ov-geo-bar"></canvas></div></div>
+    </div>
+  </div>
+  <div class="chart-block" style="margin-bottom:12px">
+    <div class="sec-hdr">📈 Conversion Rate Trend (%) <span>vs 3% target</span></div>
+    <div class="chart-card"><div class="chart-wrap" style="height:200px"><canvas id="c-conv-trend"></canvas></div></div>
+  </div>
+  <div id="ov-alerts"></div>
+</div>
+
+<!-- FUNNEL -->
+<div id="page-funnel" class="page">
+  <div class="fbar">
+    <div class="gf-group">
+      <label>Data Source:</label>
+      <select id="fn-source" onchange="renderFunnel()">
+        <option value="assigned">Assigned Leads (Standard Record)</option>
+        <option value="stage">Lead Stage Log (History)</option>
+        <option value="cust">Customer Log (Direct)</option>
+      </select>
+    </div>
+    <div style="flex:1"></div>
+    <button class="btn-export btn-csv" onclick="exportTableCSV('fn-detail-grid','funnel_kpis')">⬇ Export CSV</button>
+    <button class="btn-export btn-pdf" onclick="printSection('page-funnel')">🖨 Print</button>
+  </div>
+  
+  <div class="fn-detail-grid" id="fn-detail-grid"></div>
+  <div class="chart-block">
+    <div class="sec-hdr">Sales Conversion Funnel <span>click any stage to see those leads</span></div>
+    <div class="chart-card-full" id="funnel-bars"></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-block">
+      <div class="sec-hdr">Stage Breakdown by Salesperson (Top 12)</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:320px"><canvas id="c-funnel-sp"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Conversion Rate by Salesperson (%) <span>green = above 3% target</span></div>
+      <div class="chart-card"><div class="chart-wrap" style="height:320px"><canvas id="c-conv-sp"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SOURCES — clickable cards -->
+<div id="page-sources" class="page">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px">
+    <button class="btn-export btn-csv" onclick="exportTableCSV('src-cards','sources')">⬇ Export CSV</button>
+    <button class="btn-export btn-pdf" onclick="printSection('page-sources')">🖨 Print</button>
+  </div>
+  
+  <div class="chart-block">
+    <div class="sec-hdr">Lead Sources — Click any source to open full drill-down dashboard <span>interactive</span></div>
+    <div class="chart-card-full" id="src-cards"></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-block">
+      <div class="sec-hdr">Volume by Source</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:280px"><canvas id="c-src-vol"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Conversion % by Source</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:280px"><canvas id="c-src-conv"></canvas></div></div>
+    </div>
+  </div>
+  <div class="chart-block">
+    <div class="sec-hdr">Source Intelligence Table</div>
+    <div class="tbl-controls">
+      <input class='tbl-search' placeholder='Search...' oninput='searchTable(this,"tbl-src")' style='min-width:180px'>
+      <select id="f-src-sig" onchange="renderSources()" style="padding:5px 8px;font-size:11px;border:1.5px solid #BDD7EE;border-radius:4px;font-family:Calibri,Arial,sans-serif">
+        <option value="">All Signals</option>
+        <option value="High ROI">High ROI</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-src','tbl-src')">⬇ CSV</button>
+      <button class="btn-export btn-pdf" onclick="printTableOnly('tbl-src')">🖨 Print</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Source ↕</th>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Total Leads ↕</th>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Orders ↕</th>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Conv% ↕</th>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Dropped ↕</th>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Drop% ↕</th>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Active ↕</th>
+            <th style="cursor:pointer" onclick="sortTableCol(this)">Signal ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-src"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TEAM -->
+<div id="page-team" class="page">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px">
+    <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-team','team')">⬇ Export CSV</button>
+    <button class="btn-export btn-pdf" onclick="printSection('page-team')">🖨 Print</button>
+  </div>
+  
+  <div class="fbar">
+    <label>Designation</label><select id="f-desig" onchange="renderTeam()"><option value="">All</option></select>
+    <label>Data Source</label>
+    <select id="f-team-src" onchange="renderTeam()" style="padding:5px 8px;font-size:11px;border:1.5px solid #BDD7EE;border-radius:4px;font-family:Calibri,Arial,sans-serif">
+      <option value="assigned">Assigned Lead Report</option>
+      <option value="stage">Lead Stage Log</option>
+      <option value="cust">Customer Stage Log</option>
+      <option value="combined">Combined (All Logs)</option>
+    </select>
+    <button class="btn-reset" style="background:#2E75B6;color:#fff;border:none" onclick="renderTeam()">🔍 Search / Apply</button>
+    <button class="btn-reset" onclick="document.getElementById('f-desig').value='';document.getElementById('f-team-src').value='assigned';renderTeam()">✕ Reset All</button>
+  </div>
+  <div class="chart-block">
+    <div class="sec-hdr">Salesperson KPI Scorecard — click any row to drill into that rep</div>
+    <div class="tbl-controls">
+      <input class='tbl-search' placeholder='Search...' oninput='searchTable(this,"tbl-team")' style='min-width:180px'>
+      <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-team','tbl-team')">⬇ CSV</button>
+      <button class="btn-export btn-pdf" onclick="printTableOnly('tbl-team')">🖨 Print</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Salesperson</th><th>Designation</th><th>Total Leads</th><th>Orders</th><th>Conv%</th><th>Dropped</th><th>Drop%</th><th>Active</th><th>Grade</th></tr></thead><tbody id="tbl-team"></tbody></table></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-block">
+      <div class="sec-hdr">Orders by Salesperson</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-team-orders"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Drop Rate % by Salesperson</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-team-drop"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- GEO -->
+<div id="page-geo" class="page">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px">
+    <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-geo','geography')">⬇ Export CSV</button>
+    <button class="btn-export btn-pdf" onclick="printSection('page-geo')">🖨 Print</button>
+  </div>
+  
+  <div class="chart-block">
+    <div class="sec-hdr">State-wise Lead Intelligence</div>
+    <div class="tbl-controls">
+      <input class='tbl-search' placeholder='Search...' oninput='searchTable(this,"tbl-geo")' style='min-width:180px'>
+      <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-geo','tbl-geo')">⬇ CSV</button>
+      <button class="btn-export btn-pdf" onclick="printTableOnly('tbl-geo')">🖨 Print</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>State</th><th>Total Leads</th><th>Orders</th><th>Conv%</th><th>Dropped</th><th>Drop%</th><th>Active</th><th>Priority</th></tr></thead><tbody id="tbl-geo"></tbody></table></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-block">
+      <div class="sec-hdr">Top States by Lead Volume</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-geo-vol"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Conversion % by State</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-geo-conv"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div id="page-products" class="page">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px">
+    <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-prod','products')">⬇ Export CSV</button>
+    <button class="btn-export btn-pdf" onclick="printSection('page-products')">🖨 Print</button>
+  </div>
+  
+  <div class="chart-block">
+    <div class="sec-hdr">Product Intelligence Table</div>
+    <div class="tbl-controls">
+      <input class='tbl-search' placeholder='Search...' oninput='searchTable(this,"tbl-prod")' style='min-width:180px'>
+      <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-prod','tbl-prod')">⬇ CSV</button>
+      <button class="btn-export btn-pdf" onclick="printTableOnly('tbl-prod')">🖨 Print</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Product</th><th>Total Leads</th><th>Orders</th><th>Conv%</th><th>Dropped</th><th>Drop%</th><th>Signal</th></tr></thead><tbody id="tbl-prod"></tbody></table></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-block">
+      <div class="sec-hdr">Top Products by Lead Volume</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-prod-vol"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Product Conversion %</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-prod-conv"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+
+<div id="page-leads" class="page">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px">
+    <button class="btn-export btn-csv" onclick="exportTableCSV('tbl-leads-unified','leads_export')">⬇ Export CSV</button>
+    <button class="btn-export btn-pdf" onclick="printSection('page-leads')">🖨 Print</button>
+  </div>
+  
+  <div class="fbar">
+    <div class="gf-group">
+      <label>Data Source</label>
+      <select id="f-leads-src" onchange="renderLeadsTable()" style="padding:5px 8px;font-size:11px;border:1.5px solid #2E75B6;border-radius:4px;font-family:Calibri,Arial,sans-serif;min-width:160px">
+        <option value="assigned">Assigned Leads (File 1)</option>
+        <option value="stage">Lead Stage Log (File 2)</option>
+        <option value="cust">Customer Stage Log (File 3)</option>
+        <option value="combined">Combined History (Logs)</option>
+      </select>
+    </div>
+    <div class="gf-group"><label>Salesperson</label><select id="f-ld-sp" onchange="renderLeadsTable()"><option value="">All</option></select></div>
+    <div class="gf-group"><label>Stage</label><select id="f-ld-stage" onchange="renderLeadsTable()"><option value="">All</option></select></div>
+    <div class="gf-group"><label>Source</label><select id="f-ld-src" onchange="renderLeadsTable()"><option value="">All</option></select></div>
+    <div class="gf-group"><label>State</label><select id="f-ld-state" onchange="renderLeadsTable()"><option value="">All</option></select></div>
+    <div class="gf-group"><label>Product</label><select id="f-ld-prod" onchange="renderLeadsTable()"><option value="">All</option></select></div>
+    <button class="btn-reset" onclick="resetLeadFilters()">✕ Reset</button>
+    <span id="ld-count" style="font-size:11px;color:#1F3864;font-weight:700"></span>
+  </div>
+
+  <div id="leads-kpis" class="kpi-grid-4" style="margin-bottom:14px"></div>
+
+  <div class="chart-block">
+    <div class="sec-hdr">Leads & Activity Logs <span id="leads-hdr-count"></span></div>
+    <div class="tbl-controls">
+      <input class='tbl-search' placeholder='Search records...' oninput='searchTable(this,"tbl-leads")' style='min-width:220px'>
+    </div>
+    <div class="tbl-wrap">
+      <table id="tbl-leads-unified">
+        <thead id="tbl-leads-head">
+          <!-- Dynamic headers -->
+        </thead>
+        <tbody id="tbl-leads"></tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div id="unified-charts" class="chart-grid" style="display:none">
+    <div class="chart-block">
+      <div class="sec-hdr">Stage Distribution</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-unified-stage"></canvas></div></div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-hdr">Daily/Monthly Volume</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:300px"><canvas id="c-unified-trend"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CEO REPORT -->
+<div id="page-ceo" class="page">
+  <div id="ceo-content"></div>
+</div>
+
+</div><!-- /content -->
+
+<!-- SOURCE DRILL-DOWN OVERLAY -->
+<div class="drill-overlay" id="drill-overlay" onclick="closeDrill(event)">
+  <div class="drill-panel" onclick="event.stopPropagation()">
+    <div class="drill-header">
+      <div><h2 id="drill-title">Source Drill-Down</h2><p id="drill-subtitle"></p></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="printDrillPanel()" style="padding:5px 14px;background:#ED7D31;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif">🖨 Print/PDF</button>
+        <button onclick="exportDrillCSV()" style="padding:5px 14px;background:#217346;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif">⬇ CSV</button>
+        <button class="drill-close" onclick="closeDrillPanel()">✕ Close</button>
+      </div>
+    </div>
+    <div class="drill-body" id="drill-body"></div>
+  </div>
+</div>
+
+<!-- SALESPERSON DRILL-DOWN OVERLAY -->
+<div class="drill-overlay" id="sp-overlay" onclick="closeSpDrill(event)">
+  <div class="drill-panel" onclick="event.stopPropagation()">
+    <div class="drill-header">
+      <div><h2 id="sp-drill-title">Salesperson Drill-Down</h2><p id="sp-drill-subtitle"></p></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="printSpDrill()" style="padding:5px 14px;background:#ED7D31;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif">🖨 Print/PDF</button>
+        <button onclick="exportSpDrillCSV()" style="padding:5px 14px;background:#217346;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif">⬇ CSV</button>
+        <button class="drill-close" onclick="closeSpDrillPanel()">✕ Close</button>
+      </div>
+    </div>
+    <div class="drill-body" id="sp-drill-body"></div>
+  </div>
+</div>
+
+<script>
+// ── GLOBALS ──
+let assignedLeads=[], stageLogData=[], custLogData=[], ceoData={};
+let charts={};
+const STAGE_ORDER=['NOT TOUCHED','PROSPECT','INTRODUCTION','QUOTATION','SAMPLE','NEGOTIATION','ORDER','REPEAT ORDER','GIVEN TO CC','DROPPED'];
+const STAGE_COLORS={'NOT TOUCHED':'#95a5a6','PROSPECT':'#3498db','INTRODUCTION':'#9b59b6','QUOTATION':'#f39c12','SAMPLE':'#1abc9c','NEGOTIATION':'#e67e22','ORDER':'#27ae60','REPEAT ORDER':'#2ecc71','GIVEN TO CC':'#2980b9','DROPPED':'#e74c3c'};
+const PALETTE=['#1F3864','#2E75B6','#ED7D31','#538135','#C00000','#7030A0','#00897B','#BF8F00','#4472C4','#FF7F50','#70AD47','#FFC000','#5B9BD5','#9DC3E6','#FF0000','#A9D18E'];
+
+function markFile(inputId, nameId, slotNum) {
+  const f = document.getElementById(inputId).files[0];
+  if (!f) return;
+  const nameEl = document.getElementById(nameId);
+  nameEl.textContent = '✅ ' + f.name + ' (' + (f.size/1024).toFixed(0) + ' KB)';
+  nameEl.style.color = '#538135';
+  const slot = document.getElementById('slot' + slotNum);
+  if (slot) {
+    slot.style.borderColor = '#538135';
+    slot.style.borderStyle = 'solid';
+    slot.style.background = '#F0FFF4';
+  }
+  checkAllFiles();
+}
+
+function handleDrop(e, slotNum) {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const slotInputMap = {1:'f-assigned', 2:'f-stagelog', 3:'f-custlog'};
+  const slotNameMap = {1:'n-assigned', 2:'n-stagelog', 3:'n-custlog'};
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  document.getElementById(slotInputMap[slotNum]).files = dt.files;
+  markFile(slotInputMap[slotNum], slotNameMap[slotNum], slotNum);
+}
+
+function checkAllFiles() {
+  const f1 = document.getElementById('f-assigned').files[0];
+  const f2 = document.getElementById('f-stagelog').files[0];
+  const f3 = document.getElementById('f-custlog').files[0];
+  const btn = document.getElementById('btn-load');
+  if (f1 || f2 || f3) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    if (f1 && f2 && f3) {
+      btn.textContent = '⚡ All 3 Ready — Build Dashboard!';
+      btn.style.background = 'linear-gradient(135deg,#375623,#538135)';
+    } else {
+      btn.textContent = '⚡ Generate Dashboard';
+      btn.style.background = '#1F3864';
+    }
+  }
+}
+
+function switchUploadTab(tab) {
+  document.getElementById('utab-file-content').style.display = tab === 'file' ? 'block' : 'none';
+  document.getElementById('utab-gs-content').style.display = tab === 'gs' ? 'block' : 'none';
+  document.getElementById('utab-file').style.background = tab === 'file' ? '#1F3864' : '#EEF4FF';
+  document.getElementById('utab-file').style.color = tab === 'file' ? '#fff' : '#1F3864';
+  document.getElementById('utab-gs').style.background = tab === 'gs' ? '#1F3864' : '#EEF4FF';
+  document.getElementById('utab-gs').style.color = tab === 'gs' ? '#fff' : '#1F3864';
+}
+
+function showStatus(msg, err=false) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.color = err ? '#C00000' : '#1F3864';
+  document.getElementById('pbar-wrap').style.display = 'block';
+  if (err) {
+    const errEl = document.getElementById('err-msg');
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
+}
+
+function setProg(pct, msg) {
+  document.getElementById('pbar-fill').style.width = pct + '%';
+  document.getElementById('status-bar').textContent = msg;
+  document.getElementById('pbar-wrap').style.display = 'block';
+}
+
+function goBackToUpload() {
+  document.getElementById('upload-screen').style.display = 'flex';
+  document.getElementById('dashboard-banner').style.display = 'none';
+  document.getElementById('tabs').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+}
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='leads') renderLeadsTable();
+}
+function groupBy(arr,key){return arr.reduce((a,i)=>{const k=i[key]||'Unknown';(a[k]=a[k]||[]).push(i);return a;},{});}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function readXLSX(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];res(XLSX.utils.sheet_to_json(ws,{header:1,defval:''}));}catch(err){rej(err);}};
+    r.onerror=rej;r.readAsArrayBuffer(file);
+  });
+}
+function readXLSXAllSheets(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'});const out={};wb.SheetNames.forEach(n=>{out[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''});});res(out);}catch(err){rej(err);}};
+    r.onerror=rej;r.readAsArrayBuffer(file);
+  });
+}
+
+function parseAssigned(rows){
+  const hdrs=rows[1].map(h=>String(h).trim().toUpperCase());
+  const idx=k=>hdrs.indexOf(k);
+  return rows.slice(2).filter(r=>r[idx('LEAD AID')]).map(r=>({
+    id:r[idx('LEAD AID')],source:String(r[idx('LEAD SOURCE')]||'').trim(),
+    type:String(r[idx('LEAD TYPE')]||'').trim(),queryTime:r[idx('LEAD QUERY TIME')],
+    name:String(r[idx('LEAD PERSON NAME')]||'').trim(),contact:String(r[idx('LEAD CONTACT NO')]||'').trim(),
+    email:String(r[idx('LEAD EMAIL')]||'').trim(),company:String(r[idx('LEAD COMPANY')]||'').trim(),
+    city:String(r[idx('LEAD CITY')]||'').trim(),state:String(r[idx('LEAD STATE')]||'').trim(),
+    product:String(r[idx('LEAD PRODUCT NAME')]||'').trim(),remarks:String(r[idx('LEAD REMARKS')]||'').trim(),
+    createdOn:r[idx('LEAD CREATED ON')],stage:String(r[idx('STAGE')]||'NOT TOUCHED').trim().toUpperCase(),
+    stageRemarks:String(r[idx('REMARKS')]||'').trim(),empCode:String(r[idx('EMP CODE')]||'').trim(),
+    empName:String(r[idx('EMP NAME')]||'').trim(),
+  }));
+}
+
+async function loadAll(){
+  const fA=document.getElementById('f-assigned').files[0];
+  const fS=document.getElementById('f-stagelog').files[0];
+  const fC=document.getElementById('f-custlog').files[0];
+  if(!fA&&!fS&&!fC){
+    const e=document.getElementById('err-msg');
+    e.textContent='Please upload at least one file.';e.style.display='block';return;
+  }
+  const btn=document.getElementById('btn-load');
+  btn.disabled=true;btn.textContent='⏳ Processing...';
+  document.getElementById('err-msg').style.display='none';
+  setProg(10,'Reading files...');
+  try{
+    if(fA){setProg(25,'Parsing Assigned Lead Report...');const rows=await readXLSX(fA);assignedLeads=parseAssigned(rows);}
+    if(fS){setProg(55,'Parsing Lead Stage Log...');const rows=await readXLSX(fS);stageLogData=parseStageLog(rows);}
+    if(fC){setProg(75,'Parsing Customer Stage Log...');const rows=await readXLSX(fC);custLogData=parseStageLog(rows);}
+    setProg(90,'Building dashboard...');
+    await new Promise(r=>setTimeout(r,80));
+    document.getElementById('upload-screen').style.display='none';
+    document.getElementById('dashboard-banner').style.display='flex';
+    buildDashboard();
+    setProg(100,'✅ Done!');
+  }catch(e){
+    const em=document.getElementById('err-msg');
+    em.textContent='❌ Error: '+e.message;em.style.display='block';
+    setProg(0,'');
+    btn.disabled=false;btn.textContent='⚡ Generate Dashboard';
+  }
+}
+
+function buildDashboard(){
+  document.getElementById('tabs').style.display='flex';
+  document.getElementById('main-content').style.display='block';
+  document.getElementById('gfbar').style.display='flex';
+  filteredLeads=[...assignedLeads];
+  populateFilters();
+  rebuildDashboard();
+  if(Object.keys(ceoData).length)renderCEO();
+}
+
+function rebuildDashboard(){
+  const leads=isFiltered()?filteredLeads:assignedLeads;
+  updateBannerPills(leads);
+  renderOverview(leads);renderFunnel(leads);renderSources(leads);renderTeam(leads);renderGeo(leads);renderProducts(leads);
+  renderLeadsTable();
+}
+
+// Get filtered log data based on global rep filter + log selector
+function getFilteredLogData(logType){
+  var logSrc = logType || GF.log || (document.getElementById('gf-log')||{}).value || 'both';
+  var rawData = logSrc==='stage' ? stageLogData : logSrc==='cust' ? custLogData : [...stageLogData,...custLogData];
+  // Apply rep filter
+  if(GF.rep&&GF.rep.size>0){
+    rawData=rawData.filter(function(r){return GF.rep.has(r.empName);});
+  }
+  // Apply month filter (using assignedDate for lead log, any stage date for cust log)
+  if(GF.month){
+    rawData=rawData.filter(function(r){
+      var dateVal=r.assignedDate||r.startDate||r.introduction||r.prospect||r.order;
+      if(!dateVal)return false;
+      var d=r.assignedDate?parseDateDDMM(dateVal):parseDateMMDD(dateVal);
+      if(!d)return false;
+      var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      return k===GF.month;
+    });
+  }
+  return rawData;
+}
+
+function isFiltered(){
+  return GF.month||GF.rep.size>0||GF.src.size>0||GF.prod||GF.state||GF.stage.size>0||(GF.log&&GF.log!=='both');
+}
+
+function updateBannerPills(leads){
+  window._currentLeads = leads;
+  // Store stagnant/noprogress for popup access (set after calculation below)
+  const t=leads.length,o=leads.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length;
+  const d=leads.filter(l=>l.stage==='DROPPED').length,a=leads.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER').length;
+  const sps=new Set(leads.map(l=>l.empName).filter(Boolean)).size;
+  const conv=t>0?(o/t*100).toFixed(1):0,dr=t>0?(d/t*100).toFixed(1):0;
+  const apc=t>0?(a/t*100).toFixed(1):0;
+  // Compute avg TAT intro->order from stage logs
+  const tatDays=computeGlobalTAT(stageLogData,custLogData,'introduction','order');
+  document.getElementById('banner-sub').textContent=`Period: ${getDateRange(leads)} | Records: ${t.toLocaleString()} | Click any chart or card to filter`;
+  document.getElementById('banner-pills').innerHTML=[
+    {v:t.toLocaleString(),l:'TOTAL LEADS',s:'All sources',fn:"openKPIPopup('all')"},
+    {v:o+' ('+conv+'%)',l:'ORDERS WON',s:'Order+Repeat',fn:"openKPIPopup('orders')"},
+    {v:d.toLocaleString()+' ('+dr+'%)',l:'TOTAL DROPPED',s:'Leads lost',fn:"openKPIPopup('dropped')"},
+    {v:a.toLocaleString()+' ('+apc+'%)',l:'ACTIVE LEADS',s:'In pipeline',fn:"openKPIPopup('active')"},
+    {v:sps,l:'SALESPERSONS',s:'Active reps',fn:''},
+    {v:tatDays?tatDays+'d':'—',l:'AVG TAT',s:'Intro→Order',fn:''},
+    {v:leads.filter(l=>{if(!['PROSPECT','INTRODUCTION','SAMPLE','QUOTATION','NEGOTIATION','NOT TOUCHED'].includes(l.stage))return false;const d=String(l.createdOn||''),m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(!m)return false;return(new Date()-new Date(m[3],m[2]-1,m[1]))/86400000>=60;}).length.toLocaleString(),l:'STAGNANT 60+d',s:'No progress',fn:"openKPIPopup('stagnant')"},
+    {v:sps,l:'SALESPERSONS',s:'Active reps',fn:''},
+    {v:tatDays?tatDays+'d':'—',l:'AVG TAT',s:'Intro→Order',fn:''},
+  ].map(p=>`<div class="bpill" onclick="${p.fn||'void(0)'}" style="cursor:${p.fn?'pointer':'default'}">
+    <div class="bv">${p.v}</div><div class="bl">${p.l}</div><div class="bs">${p.s}</div>
+  </div>`).join('');
+}
+
+function getDateRange(leads){
+  const months=leads.map(l=>{const d=String(l.createdOn||''),m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]:null;}).filter(Boolean).sort();
+  if(!months.length)return 'All time';
+  function fmt(ym){const [y,m]=ym.split('-');return new Date(y,m-1).toLocaleString('en',{month:'short',year:'numeric'});}
+  return fmt(months[0])+' – '+fmt(months[months.length-1]);
+}
+
+function computeGlobalTAT(slData,clData,fromKey,toKey){
+  const all=[...slData,...clData];
+  const diffs=[];
+  all.forEach(r=>{
+    const f=r[fromKey],t=r[toKey];
+    if(f&&t){
+      const fd=parseDate2(f),td=parseDate2(t);
+      if(fd&&td){const d=Math.round((td-fd)/86400000);if(d>=0&&d<1000)diffs.push(d);}
+    }
+  });
+  if(!diffs.length)return null;
+  return Math.round(diffs.reduce((s,v)=>s+v,0)/diffs.length*10)/10;
+}
+
+function parseDate2(v){
+  if(!v)return null;
+  if(v instanceof Date)return isNaN(v.getTime())?null:v;
+  // Excel serial number (number type from XLSX without cellDates)
+  if(typeof v==='number'){
+    if(v>25000&&v<60000){var ep=new Date(1899,11,30);return new Date(ep.getTime()+v*86400000);}
+    return null;
+  }
+  var s=String(v).trim();
+  if(!s||s==='null'||s==='undefined'||s==='nan'||s==='NaN'||s==='')return null;
+  // FORMAT 1: DD-MM-YYYY (Lead Stage Log, hyphens, no time)
+  var m1=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+  if(m1){var d=+m1[1],mo=+m1[2],yr=+m1[3];if(yr>1990&&yr<2100&&mo>=1&&mo<=12&&d>=1&&d<=31)return new Date(yr,mo-1,d);}
+  // FORMAT 2: DD/MM/YYYY HH:MM (Assigned Leads - day first, always day<=31 month<=12)
+  // FORMAT 3: MM/DD/YYYY HH:MM:SS (Customer Log - month first)
+  var m2=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m2){
+    var p1=+m2[1],p2=+m2[2],yr2=+m2[3];
+    if(yr2<1990||yr2>2100)return null;
+    // If p1>12 → must be DD/MM (day first) 
+    if(p1>12)return new Date(yr2,p2-1,p1);
+    // If p2>12 → must be MM/DD (month first)  
+    if(p2>12)return new Date(yr2,p1-1,p2);
+    // Ambiguous: use context clue - if year is recent (>2020) it's likely a stage date
+    // Customer log START DATE has old years (2012,2013) - stage dates have 2024-2026
+    // For stage/activity dates we assume MM/DD (customer log format)
+    // For assigned/created dates we assume DD/MM (assigned leads format)
+    // We can't tell from the value alone - return both and let caller decide
+    // Default: treat as MM/DD/YYYY (customer log is the ambiguous one)
+    return new Date(yr2,p1-1,p2);
+  }
+  // FORMAT 4: YYYY-MM-DD
+  var m4=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m4)return new Date(+m4[1],+m4[2]-1,+m4[3]);
+  var dn=new Date(s);
+  return isNaN(dn.getTime())?null:dn;
+}
+
+// Parse date from Assigned Lead file (DD/MM/YYYY HH:MM format)
+function parseDateDDMM(v){
+  if(!v)return null;
+  if(v instanceof Date)return isNaN(v.getTime())?null:v;
+  if(typeof v==='number')return parseDate2(v);
+  var s=String(v).trim();
+  if(!s||s==='nan'||s==='')return null;
+  // DD/MM/YYYY HH:MM
+  var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+  // DD-MM-YYYY
+  var m2=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+  if(m2)return new Date(+m2[3],+m2[2]-1,+m2[1]);
+  return null;
+}
+
+// Parse date from Customer Log (MM/DD/YYYY HH:MM:SS format)
+function parseDateMMDD(v){
+  if(!v)return null;
+  if(v instanceof Date)return isNaN(v.getTime())?null:v;
+  if(typeof v==='number')return parseDate2(v);
+  var s=String(v).trim();
+  if(!s||s==='nan'||s==='')return null;
+  var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m){var yr=+m[3];if(yr<2010)return null;// Skip very old START DATE values (pre-2010)
+    return new Date(yr,+m[1]-1,+m[2]);}
+  return parseDate2(v);
+}
+
+// ── GLOBAL FILTER STATE ──
+let GF = {month:'', rep:new Set(), src:new Set(), prod:'', state:'', stage:new Set(), log:'both'};
+let filteredLeads = []; // current filtered set
+
+function populateFilters(){
+  const sps=[...new Set(assignedLeads.map(l=>l.empName).filter(Boolean))].sort();
+  const stages=[...new Set(assignedLeads.map(l=>l.stage).filter(Boolean))].sort();
+  const sources=[...new Set(assignedLeads.map(l=>l.source).filter(Boolean))].sort();
+  const states=[...new Set(assignedLeads.map(l=>l.state).filter(Boolean))].sort();
+  const prods=[...new Set(assignedLeads.map(l=>l.product).filter(Boolean))].sort();
+  const months=[...new Set(assignedLeads.map(l=>{const d=String(l.createdOn||''),m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?`${m[3]}-${m[2]}`:null;}).filter(Boolean))].sort();
+  const desigs=[...new Set([...stageLogData,...custLogData].map(r=>r.designation).filter(Boolean))].sort();
+  const slSps=[...new Set(stageLogData.map(r=>r.empName).filter(Boolean))].sort();
+  const clSps=[...new Set(custLogData.map(r=>r.empName).filter(Boolean))].sort();
+  function fill(id,arr){const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">All</option>'+arr.map(v=>`<option value="${v}">${v}</option>`).join('');if(cur)el.value=cur;}
+  // Page-level filters
+  fill('f-ld-sp',sps);fill('f-ld-stage',stages);fill('f-ld-src',sources);fill('f-ld-state',states);fill('f-ld-prod',prods);
+  fill('f-desig',desigs);
+  // Global filter bar
+  const mEl=document.getElementById('gf-month');
+  if(mEl){mEl.innerHTML='<option value="">All Months</option>'+months.map(m=>{const [y,mo]=m.split('-');const mn=new Date(y,mo-1).toLocaleString('en',{month:'short',year:'numeric'});return `<option value="${m}">${mn}</option>`;}).join('');}
+  fill('gf-prod',prods);fill('gf-state',states);
+  // Multi-selects
+  initMSOpts('rep',sps,'ms-rep-opts');
+  initMSOpts('src',sources,'ms-src-opts');
+  initMSOpts('stg',stages,'ms-stg-opts');
+  filteredLeads = [...assignedLeads];
+  updateGCount();
+}
+
+function initMSOpts(key,opts,containerId){
+  const c=document.getElementById(containerId);
+  if(!c)return;
+  c.innerHTML=opts.map(v=>`<label><input type="checkbox" value="${v}" checked onchange="msChange('${key}')"> ${v}</label>`).join('');
+}
+
+function toggleMS(key){
+  const keys=['rep','src','stg'];
+  keys.forEach(k=>{if(k!==key)document.getElementById('ms-'+k+'-drop')?.classList.remove('open');});
+  document.getElementById('ms-'+key+'-drop')?.classList.toggle('open');
+}
+
+function filterMSOpts(key,s){
+  document.querySelectorAll(`#ms-${key}-opts label`).forEach(l=>l.style.display=l.textContent.toLowerCase().includes(s.toLowerCase())?'':'none');
+}
+
+function msChange(key){
+  const map={rep:'rep',src:'src',stg:'stage'};
+  const fkey=map[key];
+  const checked=[...document.querySelectorAll(`#ms-${key}-opts input:checked`)].map(i=>i.value);
+  const all=[...document.querySelectorAll(`#ms-${key}-opts input`)].length;
+  GF[fkey]=checked.length===all?new Set():new Set(checked);
+  updateMSBtn(key);
+  applyGlobalFilters();
+}
+
+function updateMSBtn(key){
+  const btn=document.getElementById('ms-'+key+'-btn');
+  if(!btn)return;
+  const map={rep:'rep',src:'src',stg:'stage'};
+  const sel=GF[map[key]];
+  if(sel.size===0)btn.textContent=key==='rep'?'All Reps':key==='src'?'All Sources':'All Stages';
+  else if(sel.size===1)btn.textContent=[...sel][0].split(' ')[0];
+  else btn.textContent=sel.size+' selected';
+}
+
+function msAll(key){
+  document.querySelectorAll(`#ms-${key}-opts input`).forEach(i=>i.checked=true);
+  const map={rep:'rep',src:'src',stg:'stage'};
+  GF[map[key]]=new Set();
+  updateMSBtn(key);applyGlobalFilters();
+}
+function msNone(key){
+  document.querySelectorAll(`#ms-${key}-opts input`).forEach(i=>i.checked=false);
+  const map={rep:'rep',src:'src',stg:'stage'};
+  const all=[...document.querySelectorAll(`#ms-${key}-opts input`)].map(i=>i.value);
+  GF[map[key]]=new Set(all);// all selected in "none" set = show nothing
+  updateMSBtn(key);applyGlobalFilters();
+}
+
+function applyGlobalFilters(){
+  GF.month=document.getElementById('gf-month')?.value||'';
+  GF.prod=document.getElementById('gf-prod')?.value||'';
+  GF.state=document.getElementById('gf-state')?.value||'';
+  GF.log=(document.getElementById('gf-log')||{}).value||'both';
+  filteredLeads=assignedLeads.filter(l=>{
+    if(GF.month){const d=String(l.createdOn||''),m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(!m||`${m[3]}-${m[2]}`!==GF.month)return false;}
+    if(GF.rep.size>0&&!GF.rep.has(l.empName))return false;
+    if(GF.src.size>0&&!GF.src.has(l.source))return false;
+    if(GF.prod&&l.product!==GF.prod)return false;
+    if(GF.state&&l.state!==GF.state)return false;
+    if(GF.stage.size>0&&!GF.stage.has(l.stage))return false;
+    return true;
+  });
+  const isFiltered=GF.month||GF.rep.size>0||GF.src.size>0||GF.prod||GF.state||GF.stage.size>0;
+  const badge=document.getElementById('gbadge');
+  if(badge)badge.className=(isFiltered)?'gbadge on':'gbadge';
+  updateGCount();
+  rebuildDashboard();
+  renderTATCards();
+}
+
+function resetGlobalFilters(){
+  GF={month:'',rep:new Set(),src:new Set(),prod:'',state:'',stage:new Set()};
+  const gfm=document.getElementById('gf-month');if(gfm)gfm.value='';
+  const gfp=document.getElementById('gf-prod');if(gfp)gfp.value='';
+  const gfs=document.getElementById('gf-state');if(gfs)gfs.value='';
+  const gfl=document.getElementById('gf-log');if(gfl)gfl.value='both';
+  GF.log='both';
+  ['rep','src','stg'].forEach(k=>{
+    document.querySelectorAll(`#ms-${k}-opts input`).forEach(i=>i.checked=true);
+    updateMSBtn(k);
+  });
+  const badge=document.getElementById('gbadge');if(badge)badge.className='gbadge';
+  filteredLeads=[...assignedLeads];
+  updateGCount();rebuildDashboard();
+  renderTATCards();
+}
+
+function updateGCount(){
+  const el=document.getElementById('gcount');
+  if(el)el.textContent=(filteredLeads||assignedLeads).length.toLocaleString()+' leads';
+}
+
+// Close multiselects on outside click
+document.addEventListener('click',e=>{
+  ['rep','src','stg'].forEach(k=>{
+    const w=document.getElementById('ms-'+k+'-wrap');
+    if(w&&!w.contains(e.target))document.getElementById('ms-'+k+'-drop')?.classList.remove('open');
+  });
+});
+</script>
+
+<script>
+// ── OVERVIEW ──
+function renderOverview(leads){
+  leads=leads||filteredLeads||assignedLeads;
+  const t=leads.length,o=leads.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length;
+  const d=leads.filter(l=>l.stage==='DROPPED').length,a=leads.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER').length;
+  const conv=t>0?(o/t*100).toFixed(1):0,dr=t>0?(d/t*100).toFixed(1):0,ap=t>0?(a/t*100).toFixed(1):0;
+  const sps=new Set(leads.map(l=>l.empName).filter(Boolean)).size;
+  // Store leads globally so popup can access them
+  window._currentLeads = leads;
+  var today = new Date();
+  var stagnantDays = parseInt((document.getElementById('stagnant-days-sel')||{}).value||'60');
+  var stagnantSrc = (document.getElementById('stagnant-src-sel')||{}).value||'f1';
+  var noprogSrc = (document.getElementById('noprog-src-sel')||{}).value||'f1';
+  var ACTIVE_STAGES = ['PROSPECT','INTRODUCTION','SAMPLE','QUOTATION','NEGOTIATION','NOT TOUCHED','GIVEN TO CC'];
+
+  // ── STAGNANT calculation ──
+  var stagnant60 = [];
+  if(stagnantSrc==='f1'){
+    // File 1: lead in active stage, created X+ days ago
+    stagnant60 = leads.filter(function(l){
+      if(!ACTIVE_STAGES.includes(l.stage))return false;
+      var ld=parseDateDDMM(l.createdOn);
+      return ld&&(today-ld)/86400000>=stagnantDays;
+    });
+  } else {
+    // Files 2/3: last active stage date is X+ days ago
+    var logRows = getFilteredLogData(stagnantSrc==='f2' ? 'stage' : 'cust');
+    var activeKeys=['prospect','introduction','sample','quotation','negotiation'];
+    logRows.forEach(function(r){
+      var dates=[];
+      activeKeys.forEach(function(k){
+        var v=r[k];
+        if(v&&String(v).trim()&&String(v).trim()!=='nan'){
+          var d = stagnantSrc==='f2' ? parseDateDDMM(v) : parseDateMMDD(v);
+          if(d&&d.getFullYear()>=2020)dates.push(d);
+        }
+      });
+      if(dates.length>0){
+        var last=new Date(Math.max.apply(null,dates));
+        var days=Math.round((today-last)/86400000);
+        if(days>=stagnantDays) stagnant60.push({
+          empName:r.empName,compName:r.compName,lastStage:activeKeys.filter(function(k){
+            var v=r[k];return v&&String(v).trim()&&String(v).trim()!=='nan';
+          }).pop()||'',days:Math.round(days)
+        });
+      }
+    });
+  }
+
+  // ── NO PROGRESS calculation ──
+  var noProgress = [];
+  if(noprogSrc==='f1'){
+    // File 1: no remarks, not order/repeat, created 7+ days ago
+    noProgress = leads.filter(function(l){
+      if(l.stage==='ORDER'||l.stage==='REPEAT ORDER')return false;
+      if(l.stageRemarks&&l.stageRemarks.trim()&&l.stageRemarks.trim()!=='undefined')return false;
+      var ld=parseDateDDMM(l.createdOn);
+      return ld&&(today-ld)/86400000>=7;
+    });
+  } else {
+    // Files 2/3: in log but NO stage date filled at all
+    var logRows2 = getFilteredLogData(noprogSrc==='f2' ? 'stage' : 'cust');
+    var allStageKeys=['prospect','introduction','sample','quotation','negotiation','order','repeatOrder','dropped'];
+    noProgress = logRows2.filter(function(r){
+      return !allStageKeys.some(function(k){
+        var v=r[k];return v&&String(v).trim()&&String(v).trim()!=='nan';
+      });
+    });
+  }
+  // Store for popup access
+  window._stagnantRows = stagnant60;
+  window._noprogressRows = noProgress;
+  document.getElementById('ov-kpis').innerHTML=`
+    <div class="kpi-card navy" onclick="openKPIPopup('all')" style="cursor:pointer">
+      <div class="kpi-label navy">Total Leads</div><div class="kpi-value navy">${t.toLocaleString()}</div><div class="kpi-sub navy">Click to view all</div>
+    </div>
+    <div class="kpi-card green-d" onclick="openKPIPopup('orders')" style="cursor:pointer">
+      <div class="kpi-label green-d">Orders Won</div><div class="kpi-value green-d">${o}</div><div class="kpi-sub green-d">Conv: ${conv}% · click</div>
+    </div>
+    <div class="kpi-card red-d" onclick="openKPIPopup('dropped')" style="cursor:pointer">
+      <div class="kpi-label red-d">Dropped</div><div class="kpi-value red-d">${d.toLocaleString()}</div><div class="kpi-sub red-d">Drop: ${dr}% · click</div>
+    </div>
+    <div class="kpi-card orange-m" onclick="openKPIPopup('active')" style="cursor:pointer">
+      <div class="kpi-label orange-m">Active Pipeline</div><div class="kpi-value orange-m">${a.toLocaleString()}</div><div class="kpi-sub orange-m">${ap}% · click</div>
+    </div>
+    <div class="kpi-card gold-m" onclick="openKPIPopup('stagnant')" style="background:#BF8F00;cursor:pointer">
+      <div class="kpi-label" style="background:#BF8F00">STAGNANT</div>
+      <div class="kpi-value" style="background:#BF8F00">${stagnant60.length.toLocaleString()}</div>
+      <div class="kpi-sub" style="background:#BF8F00">No stage change · click</div>
+    </div>
+    <div class="kpi-card purple-m" onclick="openKPIPopup('noprogress')" style="cursor:pointer">
+      <div class="kpi-label purple-m">NO PROGRESS</div>
+      <div class="kpi-value purple-m">${noProgress.length.toLocaleString()}</div>
+      <div class="kpi-sub purple-m">No stage activity · click</div>
+    </div>`;
+
+  // ── SOURCE PERFORMANCE BAR+LINE CHART ──
+  const srcG = groupBy(leads,'source');
+  const allSrcRows = Object.entries(srcG).map(function(item){
+    var src=item[0], arr=item[1];
+    var o=arr.filter(function(l){return l.stage==='ORDER'||l.stage==='REPEAT ORDER';}).length;
+    return {src:src, total:arr.length, orders:o, conv:arr.length>0?parseFloat((o/arr.length*100).toFixed(1)):0};
+  }).sort(function(a,b){return b.total-a.total;}).slice(0,10);
+  destroyChart('c-ov-src-bar');
+  charts['c-ov-src-bar']=new Chart(document.getElementById('c-ov-src-bar'),{
+    type:'bar',
+    data:{
+      labels:allSrcRows.map(function(r){return r.src.length>16?r.src.substring(0,15)+'\u2026':r.src;}),
+      datasets:[
+        {label:'Leads',data:allSrcRows.map(function(r){return r.total;}),backgroundColor:'#2E75B6',borderRadius:3,yAxisID:'y',order:2},
+        {label:'Conv%',data:allSrcRows.map(function(r){return r.conv;}),type:'line',borderColor:'#ED7D31',backgroundColor:'rgba(237,125,49,0.12)',fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:'#ED7D31',yAxisID:'y1',order:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12}}},
+      scales:{
+        y:{beginAtZero:true,position:'left',ticks:{font:{size:9}},title:{display:true,text:'Leads',font:{size:9}}},
+        y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9},callback:function(v){return v+'%';}},title:{display:true,text:'Conv%',font:{size:9}}}
+      },
+      onClick:function(e,el){if(el.length){openSourceDrill(allSrcRows[el[0].index].src);}}
+    }
+  });
+
+  // ── GEOGRAPHY BAR+LINE CHART (top 12 states) ──
+  const stateG = groupBy(leads,'state');
+  const allGeoRows = Object.entries(stateG).map(function(item){
+    var state=item[0], arr=item[1];
+    var o=arr.filter(function(l){return l.stage==='ORDER'||l.stage==='REPEAT ORDER';}).length;
+    return {state:state, total:arr.length, orders:o, conv:arr.length>0?parseFloat((o/arr.length*100).toFixed(1)):0};
+  }).filter(function(r){return r.state && r.state.toLowerCase()!=='unknown';})
+    .sort(function(a,b){return b.total-a.total;}).slice(0,12);
+  destroyChart('c-ov-geo-bar');
+  charts['c-ov-geo-bar']=new Chart(document.getElementById('c-ov-geo-bar'),{
+    type:'bar',
+    data:{
+      labels:allGeoRows.map(function(r){return r.state.length>14?r.state.substring(0,13)+'\u2026':r.state;}),
+      datasets:[
+        {label:'Leads',data:allGeoRows.map(function(r){return r.total;}),backgroundColor:'#538135',borderRadius:3,yAxisID:'y',order:2},
+        {label:'Conv%',data:allGeoRows.map(function(r){return r.conv;}),type:'line',borderColor:'#ED7D31',backgroundColor:'rgba(237,125,49,0.1)',fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:'#ED7D31',yAxisID:'y1',order:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12}}},
+      scales:{
+        y:{beginAtZero:true,position:'left',ticks:{font:{size:9}}},
+        y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9},callback:function(v){return v+'%';}}}
+      },
+      onClick:function(e,el){if(el.length){openGeoStatePopup(allGeoRows[el[0].index].state);}}
+    }
+  });
+
+  // ── CONVERSION RATE TREND LINE CHART ──
+  var convByMonth={};
+  leads.forEach(function(l){
+    var ds=String(l.createdOn||''), ms=ds.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if(ms){
+      var k=ms[3]+'-'+ms[2];
+      if(!convByMonth[k]) convByMonth[k]={leads:0,orders:0};
+      convByMonth[k].leads++;
+      if(l.stage==='ORDER'||l.stage==='REPEAT ORDER') convByMonth[k].orders++;
+    }
+  });
+  var convKeys=Object.keys(convByMonth).sort();
+  var convVals=convKeys.map(function(k){return convByMonth[k].leads>0?parseFloat((convByMonth[k].orders/convByMonth[k].leads*100).toFixed(2)):0;});
+  var convLabels=convKeys.map(function(k){var p=k.split('-');return new Date(p[0],p[1]-1).toLocaleString('en',{month:'short',year:'numeric'});});
+  destroyChart('c-conv-trend');
+  charts['c-conv-trend']=new Chart(document.getElementById('c-conv-trend'),{
+    type:'line',
+    data:{
+      labels:convLabels,
+      datasets:[
+        {label:'Conv%',data:convVals,borderColor:'#ED7D31',backgroundColor:'rgba(237,125,49,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#ED7D31',borderWidth:2},
+        {label:'Target 3%',data:convKeys.map(function(){return 3;}),borderColor:'#538135',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12}}},
+      scales:{
+        x:{ticks:{font:{size:9},maxRotation:45}},
+        y:{beginAtZero:true,ticks:{font:{size:9},callback:function(v){return v+'%';}}}
+      }
+    }
+  });
+
+  renderTATCards();
+
+  // Monthly
+  const monthly={};
+  leads.forEach(l=>{const d=String(l.createdOn||''),m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m){const k=`${m[3]}-${m[2]}`;if(!monthly[k])monthly[k]={leads:0,orders:0};monthly[k].leads++;if(l.stage==='ORDER'||l.stage==='REPEAT ORDER')monthly[k].orders++;}});
+  const mKeys=Object.keys(monthly).sort();
+  destroyChart('c-monthly');
+  charts['c-monthly']=new Chart(document.getElementById('c-monthly'),{type:'bar',
+    data:{labels:mKeys,datasets:[{label:'Leads',data:mKeys.map(k=>monthly[k].leads),backgroundColor:'#2E75B6',borderRadius:3,yAxisID:'y'},{label:'Orders',data:mKeys.map(k=>monthly[k].orders),type:'line',borderColor:'#ED7D31',backgroundColor:'#ED7D31',pointRadius:5,yAxisID:'y1'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true,position:'left'},y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false}}}}});
+
+  // Stage donut
+  const sc={};leads.forEach(l=>{sc[l.stage]=(sc[l.stage]||0)+1;});
+  const sL=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]);
+  destroyChart('c-stage-donut');
+  charts['c-stage-donut']=new Chart(document.getElementById('c-stage-donut'),{type:'doughnut',
+    data:{labels:sL,datasets:[{data:sL.map(k=>sc[k]),backgroundColor:sL.map(k=>STAGE_COLORS[k]||'#95a5a6')}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}},
+    onClick:(e,el,ch)=>{if(el.length){const stage=sL[el[0].index];openKPIPopup('stage_'+stage);}}}});
+
+  // SP vol
+  const spG=groupBy(leads,'empName');
+  const spS=Object.entries(spG).sort((a,b)=>b[1].length-a[1].length).slice(0,12);
+  destroyChart('c-sp-vol');
+  charts['c-sp-vol']=new Chart(document.getElementById('c-sp-vol'),{type:'bar',
+    data:{labels:spS.map(x=>x[0]),datasets:[{label:'Leads',data:spS.map(x=>x[1].length),backgroundColor:PALETTE,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}},
+    onClick:(e,el,ch)=>{if(el.length){const sp=spS[el[0].index][0];openSpDrill(sp);}}}});
+
+  // Source pie
+  const srcGpie=groupBy(leads,'source');
+  const srcS=Object.entries(srcGpie).sort((a,b)=>b[1].length-a[1].length).slice(0,10);
+  destroyChart('c-src-pie');
+  charts['c-src-pie']=new Chart(document.getElementById('c-src-pie'),{type:'pie',
+    data:{labels:srcS.map(x=>x[0]),datasets:[{data:srcS.map(x=>x[1].length),backgroundColor:PALETTE}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}},onClick:(e,el,ch)=>{if(el.length){openSourceDrill(srcS[el[0].index][0]);}}}});
+
+  // Alerts
+  const alerts=[];
+  if(conv<3)alerts.push({cls:'alert-r',msg:`⚠ Conversion rate ${conv}% is below the 3% target. Industry benchmark is 10-15%.`});
+  if(d/t>0.35)alerts.push({cls:'alert-r',msg:`🚨 Drop rate ${dr}% is critically high. Over 1/3 of leads are being lost.`});
+  const unassigned=leads.filter(l=>!l.empName||l.empName==='').length;
+  if(unassigned>0)alerts.push({cls:'alert-y',msg:`⚠ ${unassigned} leads have no salesperson assigned — immediate action needed.`});
+  const jan26=leads.filter(l=>{const d=String(l.createdOn||'');const m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);return m&&m[3]==='2026'&&m[2]==='01';});
+  if(jan26.length>0&&jan26.filter(l=>l.stage==='ORDER').length===0)alerts.push({cls:'alert-r',msg:`🚨 Jan 2026: ${jan26.length} leads, ZERO orders — pipeline freeze detected.`});
+  document.getElementById('ov-alerts').innerHTML=alerts.map(a=>`<div class="alert ${a.cls}">${a.msg}</div>`).join('');
+}
+
+// ── FUNNEL ──
+function renderFunnel(leads){
+  leads = leads||window._currentLeads||filteredLeads||assignedLeads;
+  const source = document.getElementById('fn-source')?.value || 'assigned';
+  let data = leads;
+  if(source === 'stage' || source === 'cust') {
+    data = getFilteredLogData(source);
+  }
+
+  const getP = (arr, p) => {
+    const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
+    return arr.filter(r => {
+      const d = parseDate2(r.createdOn || r.assignedDate || r.startDate || r.prospect);
+      if(!d) return false;
+      const dy = d.getFullYear(), dm = d.getMonth();
+      if(p === 'tm') return dy === y && dm === m;
+      if(p === 'lm') { let lmo = m - 1, ly = y; if(lmo < 0) { lmo = 11; ly--; } return dy === ly && dm === lmo; }
+      if(p === 'lq') { const cq = Math.floor(m/3); let lq = cq - 1, lqy = y; if(lq < 0) { lq = 3; lqy--; } const qs = lq * 3, qe = qs + 2; return dy === lqy && dm >= qs && dm <= qe; }
+      if(p === 'ytd') return dy === y;
+      return true;
+    });
+  };
+
+  const getStats = (p) => {
+    const d = getP(data, p); const t = d.length;
+    const o = d.filter(l => l.stage === 'ORDER' || l.stage === 'REPEAT ORDER').length;
+    const dr = d.filter(l => l.stage === 'DROPPED').length;
+    return { t, o, dr, c: t > 0 ? (o/t*100).toFixed(1) : 0, dc: t > 0 ? (dr/t*100).toFixed(1) : 0 };
+  };
+
+  const tm = getStats('tm'), lm = getStats('lm'), lq = getStats('lq'), ytd = getStats('ytd');
+  
+  const computeTAT = (from, to) => {
+    const diffs = [];
+    data.forEach(r => {
+      const f = parseDate2(r[from]), t = parseDate2(r[to]);
+      if(f && t) { const d = Math.round((t-f)/86400000); if(d >= 0 && d < 1000) diffs.push(d); }
+    });
+    return diffs.length ? Math.round(diffs.reduce((a,b)=>a+b,0)/diffs.length) + 'd' : '—';
+  };
+
+  document.getElementById('fn-detail-grid').innerHTML = `
+    <div class="fn-detail-card">
+      <h3>Conversion Rate</h3>
+      <div class="fn-detail-row" onclick="openFunnelDrill('tm','total')"><span class="fn-label">This Month</span><span class="fn-value">${tm.c}%</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('lm','total')"><span class="fn-label">Last Month</span><span class="fn-value">${lm.c}%</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('lq','total')"><span class="fn-label">Last QTR</span><span class="fn-value">${lq.c}%</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','total')"><span class="fn-label">YTD</span><span class="fn-value">${ytd.c}%</span></div>
+    </div>
+    <div class="fn-detail-card">
+      <h3>New Orders</h3>
+      <div class="fn-detail-row" onclick="openFunnelDrill('tm','orders')"><span class="fn-label">This Month</span><span class="fn-value">${tm.o.toLocaleString()}</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('lm','orders')"><span class="fn-label">Last Month</span><span class="fn-value">${lm.o.toLocaleString()}</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('lq','orders')"><span class="fn-label">Last QTR</span><span class="fn-value">${lq.o.toLocaleString()}</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','orders')"><span class="fn-label">YTD</span><span class="fn-value">${ytd.o.toLocaleString()}</span></div>
+    </div>
+    <div class="fn-detail-card">
+      <h3>Drop</h3>
+      <div class="fn-detail-row" onclick="openFunnelDrill('tm','dropped')"><span class="fn-label">This Month</span><span class="fn-value">${tm.dr.toLocaleString()} (${tm.dc}%)</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('lm','dropped')"><span class="fn-label">Last Month</span><span class="fn-value">${lm.dr.toLocaleString()} (${lm.dc}%)</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('lq','dropped')"><span class="fn-label">Last QTR</span><span class="fn-value">${lq.dr.toLocaleString()} (${lq.dc}%)</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','dropped')"><span class="fn-label">YTD</span><span class="fn-value">${ytd.dr.toLocaleString()} (${ytd.dc}%)</span></div>
+    </div>
+    <div class="fn-detail-card">
+      <h3>Assigned to (Avg)</h3>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','tat','introduction')"><span class="fn-label">Intro</span><span class="fn-value">${computeTAT('assignedDate','introduction')}</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','tat','sample')"><span class="fn-label">Sample</span><span class="fn-value">${computeTAT('assignedDate','sample')}</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','tat','quotation')"><span class="fn-label">Quote</span><span class="fn-value">${computeTAT('assignedDate','quotation')}</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','tat','negotiation')"><span class="fn-label">Nego</span><span class="fn-value">${computeTAT('assignedDate','negotiation')}</span></div>
+      <div class="fn-detail-row" onclick="openFunnelDrill('ytd','tat','order')"><span class="fn-label">Order</span><span class="fn-value">${computeTAT('assignedDate','order')}</span></div>
+    </div>`;
+
+  // Update original funnel breakdown bars using the same source
+  const t = data.length;
+  const sc = {}; STAGE_ORDER.forEach(s => sc[s] = 0);
+  data.forEach(r => { if(sc[r.stage] !== undefined) sc[r.stage]++; else sc['NOT TOUCHED']++; });
+  
+  document.getElementById('funnel-bars').innerHTML = STAGE_ORDER.map(s => {
+    const cnt = sc[s]||0, pct = t > 0 ? (cnt/t*100).toFixed(1) : 0, w = t > 0 ? Math.max(cnt/t*100, 0.3) : 0, col = STAGE_COLORS[s]||'#95a5a6';
+    return `<div class="funnel-row" onclick="filterLeadsByStage('${s}')">
+      <div class="funnel-lbl">${s}</div><div class="funnel-cnt">${cnt.toLocaleString()}</div><div class="funnel-pct">${pct}%</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar-fill" style="width:${w}%;background:${col}">${cnt>20?cnt:''}</div></div></div>`;
+  }).join('');
+
+  // Charts (SP based)
+  const spG = groupBy(data, source === 'assigned' ? 'empName' : 'empName'); 
+  const topSPs = Object.entries(spG).sort((a,b) => b[1].length-a[1].length).slice(0,12).map(x => x[0]);
+  const aStages = ['PROSPECT','INTRODUCTION','QUOTATION','SAMPLE','NEGOTIATION','ORDER','DROPPED'];
+  destroyChart('c-funnel-sp');
+  charts['c-funnel-sp'] = new Chart(document.getElementById('c-funnel-sp'), { type:'bar',
+    data: { labels:topSPs, datasets:aStages.map((s,i) => ({ label:s, data:topSPs.map(sp => spG[sp].filter(l => l.stage===s).length), backgroundColor:STAGE_COLORS[s]||PALETTE[i], stack:'s' })) },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{ size:9 } } } }, scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } } } });
+  
+  const spConv = topSPs.map(sp => { const arr = spG[sp]; const o = arr.filter(l => l.stage==='ORDER'||l.stage==='REPEAT ORDER').length; return { sp, conv:arr.length>0 ? (o/arr.length*100).toFixed(1) : 0 }; });
+  destroyChart('c-conv-sp');
+  charts['c-conv-sp'] = new Chart(document.getElementById('c-conv-sp'), { type:'bar',
+    data: { labels:spConv.map(x=>x.sp), datasets:[{ label:'Conv%', data:spConv.map(x=>x.conv), backgroundColor:spConv.map(x=>x.conv>=3 ? '#538135' : '#C00000'), borderRadius:3 }] },
+    options: { responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true } } } });
+}
+
+function openFunnelDrill(period, type, stage) {
+  const source = document.getElementById('fn-source')?.value || 'assigned';
+  let data = (window._currentLeads || filteredLeads || assignedLeads);
+  if(source === 'stage' || source === 'cust') data = getFilteredLogData(source);
+  
+  // Filter by period
+  const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
+  let filtered = data.filter(r => {
+    const d = parseDate2(r.createdOn || r.assignedDate || r.startDate || r.prospect);
+    if(!d) return false;
+    const dy = d.getFullYear(), dm = d.getMonth();
+    if(period === 'tm') return dy === y && dm === m;
+    if(period === 'lm') { let lmo = m - 1, ly = y; if(lmo < 0) { lmo = 11; ly--; } return dy === ly && dm === lmo; }
+    if(period === 'lq') { const cq = Math.floor(m/3); let lq = cq-1, lqy=y; if(lq<0){lq=3;lqy--;} const qs=lq*3, qe=qs+2; return dy===lqy && dm>=qs && dm<=qe; }
+    if(period === 'ytd') return dy === y;
+    return true;
+  });
+
+  // Filter by type/stage
+  let title = "Funnel Drill";
+  if(type === 'orders') {
+    filtered = filtered.filter(l => l.stage === 'ORDER' || l.stage === 'REPEAT ORDER');
+    title = `Orders (${period.toUpperCase()})`;
+  } else if(type === 'dropped') {
+    filtered = filtered.filter(l => l.stage === 'DROPPED');
+    title = `Dropped (${period.toUpperCase()})`;
+  } else if(type === 'total') {
+    title = `Total Leads (${period.toUpperCase()})`;
+  } else if(type === 'tat') {
+    filtered = filtered.filter(l => l[stage]);
+    title = `${stage.toUpperCase()} Stage Leads (${period.toUpperCase()})`;
+  }
+
+  // If source is log, enrich
+  if(source !== 'assigned') filtered = enrichLogRows(filtered);
+
+  openKPIPopupFromList(title, filtered);
+}
+
+function filterLeadsByStage(stage){
+  const source = document.getElementById('fn-source')?.value || 'assigned';
+  let data = (window._currentLeads || filteredLeads || assignedLeads);
+  if(source === 'stage' || source === 'cust') data = getFilteredLogData(source);
+  
+  const rows = data.filter(l => l.stage === stage);
+  const title = `Funnel Stage: ${stage} (${rows.length} leads)`;
+  
+  // If source is log, enrich
+  let enriched = rows;
+  if(source !== 'assigned') enriched = enrichLogRows(rows);
+  
+  openKPIPopupFromList(title, enriched);
+}
+</script>
+
+<script>
+// ── SOURCES with clickable cards ──
+function renderSources(leads){leads=leads||filteredLeads||assignedLeads;
+  const srcG=groupBy(leads,'source');
+  const rows=Object.entries(srcG).map(([src,arr])=>{
+    const o=arr.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length;
+    const d=arr.filter(l=>l.stage==='DROPPED').length,a=arr.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER').length;
+    const conv=arr.length>0?(o/arr.length*100).toFixed(1):0,dr=arr.length>0?(d/arr.length*100).toFixed(1):0;
+    return{src,total:arr.length,orders:o,dropped:d,active:a,conv:parseFloat(conv),dropRate:parseFloat(dr)};
+  }).sort((a,b)=>b.total-a.total);
+
+  // Clickable source cards
+  const cardColors=['#1F3864','#2E75B6','#ED7D31','#538135','#C00000','#7030A0','#00897B','#BF8F00'];
+  document.getElementById('src-cards').innerHTML=`<div class="src-card-grid">${rows.slice(0,8).map((r,i)=>`
+    <div class="src-card" onclick="openSourceDrill('${r.src.replace(/'/g,"\\'")}')">
+      <div class="src-name" style="color:${cardColors[i%cardColors.length]}">${r.src}</div>
+      <div class="src-vol" style="color:${cardColors[i%cardColors.length]}">${r.total.toLocaleString()}</div>
+      <div style="font-size:10px;color:#555;margin-top:4px">leads</div>
+      <div class="src-conv" style="color:${r.conv>=3?'#538135':r.conv>=1?'#BF8F00':'#C00000'}">Conv: ${r.conv}% | Drop: ${r.dropRate}%</div>
+      <div class="src-hint">Click to drill down →</div>
+    </div>`).join('')}</div>`;
+
+  const sigF = document.getElementById('f-src-sig')?.value || '';
+  const filteredRows = rows.filter(r => {
+    const sig = r.conv>=3?'High ROI':r.conv>=1?'Medium':'Low';
+    return !sigF || sig === sigF;
+  });
+
+  document.getElementById('tbl-src').innerHTML=filteredRows.map(r=>{
+    const sig=r.conv>=3?'<span class="badge b-green">High ROI</span>':r.conv>=1?'<span class="badge b-blue">Medium</span>':'<span class="badge b-yellow">Low</span>';
+    return `<tr onclick="openSourceDrill('${r.src.replace(/'/g,"\\'")}')"><td>${r.src}</td><td>${r.total}</td><td>${r.orders}</td><td>${r.conv}%</td><td>${r.dropped}</td><td>${r.dropRate}%</td><td>${r.active}</td><td>${sig}</td></tr>`;
+  }).join('');
+
+  const top10=rows.slice(0,10);
+  destroyChart('c-src-vol');
+  charts['c-src-vol']=new Chart(document.getElementById('c-src-vol'),{type:'bar',
+    data:{labels:top10.map(r=>r.src),datasets:[{label:'Leads',data:top10.map(r=>r.total),backgroundColor:PALETTE,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el,ch)=>{if(el.length)openSourceDrill(top10[el[0].index].src);}}});
+  destroyChart('c-src-conv');
+  charts['c-src-conv']=new Chart(document.getElementById('c-src-conv'),{type:'bar',
+    data:{labels:top10.map(r=>r.src),datasets:[{label:'Conv%',data:top10.map(r=>r.conv),backgroundColor:top10.map(r=>r.conv>=3?'#538135':r.conv>=1?'#BF8F00':'#C00000'),borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+}
+
+// ── SOURCE DRILL-DOWN ──
+function openSourceDrill(src){
+  const leads=(filteredLeads&&(filteredLeads.length>0||isFiltered()))?filteredLeads.filter(l=>l.source===src):assignedLeads.filter(l=>l.source===src);
+  const total=leads.length,orders=leads.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length;
+  const dropped=leads.filter(l=>l.stage==='DROPPED').length,active=leads.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER').length;
+  const conv=total>0?(orders/total*100).toFixed(1):0,dr=total>0?(dropped/total*100).toFixed(1):0;
+
+  document.getElementById('drill-title').textContent=`📡 ${src} — Source Deep Dive`;
+  document.getElementById('drill-subtitle').textContent=`${total.toLocaleString()} leads | ${orders} orders | ${conv}% conversion | ${dr}% drop rate`;
+
+  // Build drill body
+  const uid='drill_'+Date.now();
+  document.getElementById('drill-body').innerHTML=`
+    <div class="kpi-grid-4" style="margin-bottom:14px">
+      <div class="kpi-card"><div class="kpi-label navy">Total Leads</div><div class="kpi-value navy">${total.toLocaleString()}</div><div class="kpi-sub">from ${src}</div></div>
+      <div class="kpi-card"><div class="kpi-label green-d">Orders</div><div class="kpi-value green-d">${orders}</div><div class="kpi-sub">Conv: ${conv}%</div></div>
+      <div class="kpi-card"><div class="kpi-label red-d">Dropped</div><div class="kpi-value red-d">${dropped}</div><div class="kpi-sub">Drop: ${dr}%</div></div>
+      <div class="kpi-card"><div class="kpi-label orange-m">Active</div><div class="kpi-value orange-m">${active}</div><div class="kpi-sub">In pipeline</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-block"><div class="sec-hdr">Monthly Lead Volume</div><div class="chart-card"><div class="chart-wrap" style="height:200px"><canvas id="${uid}_monthly"></canvas></div></div></div>
+      <div class="chart-block"><div class="sec-hdr">Stage Distribution</div><div class="chart-card"><div class="chart-wrap" style="height:200px"><canvas id="${uid}_stage"></canvas></div></div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-block"><div class="sec-hdr">Top States by Volume</div><div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="${uid}_state"></canvas></div></div></div>
+      <div class="chart-block"><div class="sec-hdr">Top Products</div><div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="${uid}_prod"></canvas></div></div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-block"><div class="sec-hdr">Salesperson Performance</div><div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="${uid}_sp"></canvas></div></div></div>
+      <div class="chart-block"><div class="sec-hdr">City-wise Distribution (Top 15)</div><div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="${uid}_city"></canvas></div></div></div>
+    </div>
+    <div class="chart-block"><div class="sec-hdr">All ${src} Leads (${leads.length})</div>
+      <div style="padding:8px 0 4px;display:flex;gap:8px;align-items:center">
+        <input id="drill-src-search" placeholder="🔍 Search leads..." oninput="window._srcDrillSearch=this.value;srcDrillRender()" style="padding:5px 9px;border:1.5px solid #BDD7EE;border-radius:4px;font-size:11px;font-family:Calibri,Arial,sans-serif;min-width:200px">
+        <select id="src-stage-filter" onchange="srcDrillRender()" style="padding:5px 8px;font-size:11px;border:1.5px solid #BDD7EE;border-radius:4px;font-family:Calibri,Arial,sans-serif">
+          <option value="">All Stages</option>
+          ${[...new Set(leads.map(l=>l.stage))].sort().map(s=>`<option value="${s}">${s}</option>`).join('')}
+        </select>
+        <span id="src-tbl-count" style="font-size:10px;color:#666;font-weight:700"></span>
+      </div>
+      <div class="tbl-wrap"><table id="drill-src-table"><thead><tr>
+        <th style="cursor:pointer" onclick="sortTableCol(this)">ID ↕</th>
+        <th style="cursor:pointer;text-align:left" onclick="sortTableCol(this)">Name ↕</th>
+        <th style="cursor:pointer;text-align:left" onclick="sortTableCol(this)">Company ↕</th>
+        <th style="cursor:pointer" onclick="sortTableCol(this)">State ↕</th>
+        <th style="cursor:pointer" onclick="sortTableCol(this)">City ↕</th>
+        <th style="cursor:pointer;text-align:left" onclick="sortTableCol(this)">Product ↕</th>
+        <th style="cursor:pointer" onclick="sortTableCol(this)">Stage ↕</th>
+        <th style="cursor:pointer;text-align:left" onclick="sortTableCol(this)">Salesperson ↕</th>
+        <th style="cursor:pointer" onclick="sortTableCol(this)">Created On ↕</th>
+      </tr></thead>
+      <tbody id="drill-leads-tbody"></tbody></table></div></div>`;
+  // Store and render source drill data
+  window._srcDrillLeads = leads;
+  window._srcDrillSearch = '';
+  srcDrillRender();
+
+  document.getElementById('drill-overlay').classList.add('open');
+
+  // Render charts after DOM update
+  setTimeout(()=>{
+    // Monthly
+    const monthly={};leads.forEach(l=>{const d=String(l.createdOn||''),m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m){const k=`${m[3]}-${m[2]}`;monthly[k]=(monthly[k]||0)+1;}});
+    const mK=Object.keys(monthly).sort();
+    new Chart(document.getElementById(uid+'_monthly'),{type:'bar',data:{labels:mK,datasets:[{label:'Leads',data:mK.map(k=>monthly[k]),backgroundColor:'#2E75B6',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+    // Stage
+    const sc={};leads.forEach(l=>{sc[l.stage]=(sc[l.stage]||0)+1;});const sL=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]);
+    new Chart(document.getElementById(uid+'_stage'),{type:'doughnut',data:{labels:sL,datasets:[{data:sL.map(k=>sc[k]),backgroundColor:sL.map(k=>STAGE_COLORS[k]||'#95a5a6')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:9}}}}}});
+    // State
+    const stG=groupBy(leads,'state');const stS=Object.entries(stG).sort((a,b)=>b[1].length-a[1].length).slice(0,12);
+    new Chart(document.getElementById(uid+'_state'),{type:'bar',data:{labels:stS.map(x=>x[0]),datasets:[{label:'Leads',data:stS.map(x=>x[1].length),backgroundColor:'#538135',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+    // Product
+    const prG=groupBy(leads,'product');const prS=Object.entries(prG).sort((a,b)=>b[1].length-a[1].length).slice(0,12);
+    new Chart(document.getElementById(uid+'_prod'),{type:'bar',data:{labels:prS.map(x=>x[0]),datasets:[{label:'Leads',data:prS.map(x=>x[1].length),backgroundColor:'#ED7D31',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+    // SP
+    const spG=groupBy(leads,'empName');const spS=Object.entries(spG).sort((a,b)=>b[1].length-a[1].length).slice(0,12);
+    new Chart(document.getElementById(uid+'_sp'),{type:'bar',data:{labels:spS.map(x=>x[0]),datasets:[{label:'Leads',data:spS.map(x=>x[1].length),backgroundColor:'#7030A0',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+    // City
+    const cG=groupBy(leads,'city');const cS=Object.entries(cG).sort((a,b)=>b[1].length-a[1].length).slice(0,15);
+    new Chart(document.getElementById(uid+'_city'),{type:'bar',data:{labels:cS.map(x=>x[0]),datasets:[{label:'Leads',data:cS.map(x=>x[1].length),backgroundColor:'#00897B',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+  },100);
+}
+function closeDrill(e){if(e.target===document.getElementById('drill-overlay'))closeDrillPanel();}
+function closeDrillPanel(){document.getElementById('drill-overlay').classList.remove('open');document.getElementById('drill-body').innerHTML='';}
+</script>
+
+<script>
+// ── TEAM with drill-down ──
+function renderTeam(leads){
+  const srcF = document.getElementById('f-team-src')?.value || 'assigned';
+  if(!leads){
+    if(srcF === 'stage') leads = stageLogData;
+    else if(srcF === 'cust') leads = custLogData;
+    else if(srcF === 'combined') leads = [...stageLogData, ...custLogData];
+    else leads = (filteredLeads && (filteredLeads.length>0||isFiltered())) ? filteredLeads : assignedLeads;
+  }
+  const desigF=document.getElementById('f-desig').value;
+  const spG=groupBy(leads,'empName');
+  let rows=Object.entries(spG).map(([sp,arr])=>{
+    const desig=stageLogData.find(r=>r.empName===sp)?.designation||custLogData.find(r=>r.empName===sp)?.designation||'';
+    const o=arr.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length,d=arr.filter(l=>l.stage==='DROPPED').length;
+    const a=arr.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER').length;
+    const conv=arr.length>0?(o/arr.length*100).toFixed(1):0,dr=arr.length>0?(d/arr.length*100).toFixed(1):0;
+    return{sp,desig,total:arr.length,orders:o,dropped:d,active:a,conv:parseFloat(conv),dropRate:parseFloat(dr)};
+  }).sort((a,b)=>b.total-a.total);
+  if(desigF)rows=rows.filter(r=>r.desig===desigF);
+  document.getElementById('tbl-team').innerHTML=rows.map((r,i)=>{
+    const grade=r.conv>=5?'<span class="badge b-star">★ Star</span>':r.conv>=3?'<span class="badge b-green">Good</span>':r.conv>=1?'<span class="badge b-blue">Avg</span>':'<span class="badge b-red">Low</span>';
+    return `<tr onclick="openSpDrill('${r.sp.replace(/'/g,"\\'")}')"><td>${i+1}</td><td>${r.sp}</td><td>${r.desig}</td><td>${r.total}</td><td>${r.orders}</td><td>${r.conv}%</td><td>${r.dropped}</td><td>${r.dropRate}%</td><td>${r.active}</td><td>${grade}</td></tr>`;
+  }).join('');
+  const top15=rows.slice(0,15);
+  destroyChart('c-team-orders');
+  charts['c-team-orders']=new Chart(document.getElementById('c-team-orders'),{type:'bar',data:{labels:top15.map(r=>r.sp),datasets:[{label:'Orders',data:top15.map(r=>r.orders),backgroundColor:'#538135',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}},onClick:(e,el,ch)=>{if(el.length)openSpDrill(top15[el[0].index].sp);}}});
+  destroyChart('c-team-drop');
+  charts['c-team-drop']=new Chart(document.getElementById('c-team-drop'),{type:'bar',data:{labels:top15.map(r=>r.sp),datasets:[{label:'Drop%',data:top15.map(r=>r.dropRate),backgroundColor:top15.map(r=>r.dropRate>50?'#C00000':r.dropRate>30?'#ED7D31':'#BF8F00'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+}
+
+// ── SALESPERSON DRILL-DOWN ──
+function openSpDrill(sp){
+  const srcF = document.getElementById('f-team-src')?.value || 'assigned';
+  let leads = [];
+  if(srcF === 'stage') leads = stageLogData;
+  else if(srcF === 'cust') leads = custLogData;
+  else if(srcF === 'combined') leads = [...stageLogData, ...custLogData];
+  else leads = (filteredLeads && (filteredLeads.length>0||isFiltered())) ? filteredLeads : assignedLeads;
+  
+  leads = leads.filter(l => l.empName === sp);
+  // Enrich if it's from log
+  if(srcF !== 'assigned') leads = enrichLogRows(leads);
+
+  const total=leads.length,orders=leads.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length;
+  const dropped=leads.filter(l=>l.stage==='DROPPED').length,active=leads.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER').length;
+  const conv=total>0?(orders/total*100).toFixed(1):0,dr=total>0?(dropped/total*100).toFixed(1):0;
+  document.getElementById('sp-drill-title').textContent=`👤 ${sp} — Full Performance Dashboard`;
+  document.getElementById('sp-drill-subtitle').textContent=`${total} leads | ${orders} orders | ${conv}% conversion | ${dr}% drop rate (${srcF === 'assigned' ? 'Assigned Leads' : 'Log Data'})`;
+  const uid='sp_'+Date.now();
+  document.getElementById('sp-drill-body').innerHTML=`
+    <div class="kpi-grid-4" style="margin-bottom:14px">
+      <div class="kpi-card navy"><div class="kpi-label navy">Total Leads</div><div class="kpi-value navy">${total}</div><div class="kpi-sub navy">assigned to ${sp}</div></div>
+      <div class="kpi-card green-d"><div class="kpi-label green-d">Orders</div><div class="kpi-value green-d">${orders}</div><div class="kpi-sub green-d">Conv: ${conv}%</div></div>
+      <div class="kpi-card red-d"><div class="kpi-label red-d">Dropped</div><div class="kpi-value red-d">${dropped}</div><div class="kpi-sub red-d">Drop: ${dr}%</div></div>
+      <div class="kpi-card orange-m"><div class="kpi-label orange-m">Active</div><div class="kpi-value orange-m">${active}</div><div class="kpi-sub orange-m">In pipeline</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-block"><div class="sec-hdr">Stage Distribution</div><div class="chart-card"><div class="chart-wrap" style="height:200px"><canvas id="${uid}_stage"></canvas></div></div></div>
+      <div class="chart-block"><div class="sec-hdr">Monthly Volume</div><div class="chart-card"><div class="chart-wrap" style="height:200px"><canvas id="${uid}_monthly"></canvas></div></div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-block"><div class="sec-hdr">Lead Sources</div><div class="chart-card"><div class="chart-wrap" style="height:200px"><canvas id="${uid}_src"></canvas></div></div></div>
+      <div class="chart-block"><div class="sec-hdr">Top Products</div><div class="chart-card"><div class="chart-wrap" style="height:200px"><canvas id="${uid}_prod"></canvas></div></div></div>
+    </div>
+    <div class="chart-block"><div class="sec-hdr">All Leads for ${sp} (${leads.length})</div>
+      <div style="padding:8px 0 4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input placeholder="🔍 Search..." oninput="spDrillSearch(this.value)" style="padding:5px 9px;border:1.5px solid #BDD7EE;border-radius:4px;font-size:11px;font-family:Calibri,Arial,sans-serif;min-width:200px">
+        <select id="sp-stage-filter" onchange="spDrillRender()" style="padding:5px 8px;font-size:11px;border:1.5px solid #BDD7EE;border-radius:4px;font-family:Calibri,Arial,sans-serif">
+          <option value="">All Stages</option>
+          ${[...new Set(leads.map(l=>l.stage))].sort().map(s=>`<option value="${s}">${s}</option>`).join('')}
+        </select>
+        <span id="sp-tbl-count" style="font-size:10px;color:#666;font-weight:700"></span>
+      </div>
+      <div class="tbl-wrap" style="max-height:420px"><table id="sp-leads-table"><thead><tr>
+        <th style="cursor:pointer" onclick="spDrillSort(this,0)">ID ↕</th>
+        <th style="cursor:pointer;text-align:left" onclick="spDrillSort(this,1)">Name ↕</th>
+        <th style="cursor:pointer;text-align:left" onclick="spDrillSort(this,2)">Company ↕</th>
+        <th style="cursor:pointer" onclick="spDrillSort(this,3)">State ↕</th>
+        <th style="cursor:pointer;text-align:left" onclick="spDrillSort(this,4)">Product ↕</th>
+        <th style="cursor:pointer" onclick="spDrillSort(this,5)">Source ↕</th>
+        <th style="cursor:pointer" onclick="spDrillSort(this,6)">Stage ↕</th>
+        <th style="cursor:pointer" onclick="spDrillSort(this,7)">Remarks</th>
+        <th style="cursor:pointer" onclick="spDrillSort(this,8)">Created On ↕</th>
+      </tr></thead>
+      <tbody id="sp-leads-tbody"></tbody></table></div></div>`;
+  // Store full leads list and render
+  window._spDrillLeads = leads;
+  window._spDrillSearch = '';
+  window._spDrillSortCol = -1;
+  window._spDrillSortAsc = true;
+  spDrillRender();
+  document.getElementById('sp-overlay').classList.add('open');
+  setTimeout(()=>{
+    const sc={};leads.forEach(l=>{sc[l.stage]=(sc[l.stage]||0)+1;});const sL=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]);
+    new Chart(document.getElementById(uid+'_stage'),{type:'doughnut',data:{labels:sL,datasets:[{data:sL.map(k=>sc[k]),backgroundColor:sL.map(k=>STAGE_COLORS[k]||'#95a5a6')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:9}}}}}});
+    const monthly={};leads.forEach(l=>{const d=String(l.createdOn||''),m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m){const k=`${m[3]}-${m[2]}`;monthly[k]=(monthly[k]||0)+1;}});
+    const mK=Object.keys(monthly).sort();
+    new Chart(document.getElementById(uid+'_monthly'),{type:'bar',data:{labels:mK,datasets:[{label:'Leads',data:mK.map(k=>monthly[k]),backgroundColor:'#2E75B6',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+    const srcG=groupBy(leads,'source');const srcS=Object.entries(srcG).sort((a,b)=>b[1].length-a[1].length).slice(0,8);
+    new Chart(document.getElementById(uid+'_src'),{type:'pie',data:{labels:srcS.map(x=>x[0]),datasets:[{data:srcS.map(x=>x[1].length),backgroundColor:PALETTE}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:9}}}}}});
+    const prG=groupBy(leads,'product');const prS=Object.entries(prG).sort((a,b)=>b[1].length-a[1].length).slice(0,10);
+    new Chart(document.getElementById(uid+'_prod'),{type:'bar',data:{labels:prS.map(x=>x[0]),datasets:[{label:'Leads',data:prS.map(x=>x[1].length),backgroundColor:'#ED7D31',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+  },100);
+}
+function closeSpDrill(e){if(e.target===document.getElementById('sp-overlay'))closeSpDrillPanel();}
+function closeSpDrillPanel(){document.getElementById('sp-overlay').classList.remove('open');document.getElementById('sp-drill-body').innerHTML='';}
+
+// ── GEO ──
+function renderGeo(leads){leads=leads||filteredLeads||assignedLeads;
+  const stG=groupBy(leads,'state');
+  const rows=Object.entries(stG).map(([st,arr])=>{
+    const o=arr.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length,d=arr.filter(l=>l.stage==='DROPPED').length;
+    const conv=arr.length>0?(o/arr.length*100).toFixed(1):0,dr=arr.length>0?(d/arr.length*100).toFixed(1):0;
+    const pri=arr.length>=300?'🔥 TIER 1':arr.length>=150?'📈 TIER 2':'🔍 TIER 3';
+    return{st,total:arr.length,orders:o,dropped:d,active:arr.length-o-d,conv:parseFloat(conv),dropRate:parseFloat(dr),pri};
+  }).sort((a,b)=>b.total-a.total);
+  document.getElementById('tbl-geo').innerHTML=rows.map(r=>`<tr><td>${r.st}</td><td>${r.total}</td><td>${r.orders}</td><td>${r.conv}%</td><td>${r.dropped}</td><td>${r.dropRate}%</td><td>${r.active}</td><td>${r.pri}</td></tr>`).join('');
+  const top15=rows.slice(0,15);
+  destroyChart('c-geo-vol');
+  charts['c-geo-vol']=new Chart(document.getElementById('c-geo-vol'),{type:'bar',data:{labels:top15.map(r=>r.st),datasets:[{label:'Leads',data:top15.map(r=>r.total),backgroundColor:PALETTE,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+  destroyChart('c-geo-conv');
+  charts['c-geo-conv']=new Chart(document.getElementById('c-geo-conv'),{type:'bar',data:{labels:top15.map(r=>r.st),datasets:[{label:'Conv%',data:top15.map(r=>r.conv),backgroundColor:top15.map(r=>r.conv>=3?'#538135':r.conv>=1?'#BF8F00':'#C00000'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+}
+
+// ── PRODUCTS ──
+function renderProducts(leads){leads=leads||filteredLeads||assignedLeads;
+  const prG=groupBy(leads,'product');
+  const rows=Object.entries(prG).map(([pr,arr])=>{
+    const o=arr.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length,d=arr.filter(l=>l.stage==='DROPPED').length;
+    const conv=arr.length>0?(o/arr.length*100).toFixed(1):0,dr=arr.length>0?(d/arr.length*100).toFixed(1):0;
+    return{pr,total:arr.length,orders:o,dropped:d,conv:parseFloat(conv),dropRate:parseFloat(dr)};
+  }).sort((a,b)=>b.total-a.total);
+  document.getElementById('tbl-prod').innerHTML=rows.map(r=>{
+    const sig=r.conv>=5?'<span class="badge b-star">★ Best</span>':r.conv>=2?'<span class="badge b-green">Good</span>':r.conv>=0.5?'<span class="badge b-blue">Avg</span>':'<span class="badge b-yellow">Low</span>';
+    return `<tr><td>${r.pr||'(blank)'}</td><td>${r.total}</td><td>${r.orders}</td><td>${r.conv}%</td><td>${r.dropped}</td><td>${r.dropRate}%</td><td>${sig}</td></tr>`;
+  }).join('');
+  const top12=rows.slice(0,12);
+  destroyChart('c-prod-vol');
+  charts['c-prod-vol']=new Chart(document.getElementById('c-prod-vol'),{type:'bar',data:{labels:top12.map(r=>r.pr||'(blank)'),datasets:[{label:'Leads',data:top12.map(r=>r.total),backgroundColor:PALETTE,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+  destroyChart('c-prod-conv');
+  charts['c-prod-conv']=new Chart(document.getElementById('c-prod-conv'),{type:'bar',data:{labels:top12.map(r=>r.pr||'(blank)'),datasets:[{label:'Conv%',data:top12.map(r=>r.conv),backgroundColor:top12.map(r=>r.conv>=5?'#538135':r.conv>=2?'#BF8F00':'#C00000'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+}
+</script>
+
+<script>
+
+// ── ALL LEADS TABLE ──
+function renderLeadsTable(){
+  const sourceEl = document.getElementById('f-leads-src');
+  const source = sourceEl?.value || 'assigned';
+  const sourceText = sourceEl?.options[sourceEl.selectedIndex]?.text || 'Leads';
+  const spF=document.getElementById('f-ld-sp').value,stF=document.getElementById('f-ld-stage').value;
+  const srF=document.getElementById('f-ld-src').value,stateF=document.getElementById('f-ld-state').value,prF=document.getElementById('f-ld-prod').value;
+
+  let data=[];
+  if(source==='assigned') data=(filteredLeads&&(filteredLeads.length>0||isFiltered()))?filteredLeads:assignedLeads;
+  else if(source==='stage'||source==='cust') data=getFilteredLogData(source);
+  else if(source==='combined') data=[...getFilteredLogData('stage'), ...getFilteredLogData('cust')];
+
+  if(source!=='assigned') data=enrichLogRows(data);
+
+  if(spF)data=data.filter(l=>l.empName===spF); if(stF)data=data.filter(l=>l.stage===stF);
+  if(srF)data=data.filter(l=>l.source===srF); if(stateF)data=data.filter(l=>l.state===stateF); if(prF)data=data.filter(l=>l.product===prF);
+  
+  window._currentLeadsView = data;
+
+  // Render Table Headers
+  const thead = document.getElementById('tbl-leads-head');
+  if(source==='assigned'){
+    thead.innerHTML=`<tr><th onclick="sortTableCol(this)">ID ↕</th><th onclick="sortTableCol(this)">Name ↕</th><th onclick="sortTableCol(this)">Company ↕</th><th onclick="sortTableCol(this)">Contact ↕</th><th onclick="sortTableCol(this)">State ↕</th><th onclick="sortTableCol(this)">Product ↕</th><th onclick="sortTableCol(this)">Source ↕</th><th onclick="sortTableCol(this)">Stage ↕</th><th onclick="sortTableCol(this)">Salesperson ↕</th><th onclick="sortTableCol(this)">Created On ↕</th></tr>`;
+  } else {
+    thead.innerHTML=`<tr><th onclick="sortTableCol(this)">Emp Code ↕</th><th onclick="sortTableCol(this)">Designation ↕</th><th onclick="sortTableCol(this)">Salesperson ↕</th><th onclick="sortTableCol(this)">Company ↕</th><th onclick="sortTableCol(this)">Assigned Date ↕</th><th onclick="sortTableCol(this)">Prospect ↕</th><th onclick="sortTableCol(this)">Introduction ↕</th><th onclick="sortTableCol(this)">Sample ↕</th><th onclick="sortTableCol(this)">Quotation ↕</th><th onclick="sortTableCol(this)">Negotiation ↕</th><th onclick="sortTableCol(this)">Order ↕</th><th onclick="sortTableCol(this)">Repeat order ↕</th><th onclick="sortTableCol(this)">Given to CC ↕</th><th onclick="sortTableCol(this)">Dropped ↕</th></tr>`;
+  }
+
+  // Render Body
+  const tbody = document.getElementById('tbl-leads');
+  if(source==='assigned'){
+    tbody.innerHTML=data.slice(0,500).map(l=>`<tr><td>${l.id}</td><td style="text-align:left;font-weight:600">${l.name}</td><td style="text-align:left">${l.company}</td><td>${l.contact}</td><td>${l.state}</td><td style="text-align:left">${l.product}</td><td>${l.source}</td><td><span class="badge" style="background:${STAGE_COLORS[l.stage]||'#95a5a6'};color:#fff">${l.stage}</span></td><td>${l.empName}</td><td>${l.createdOn||''}</td></tr>`).join('');
+  } else {
+    tbody.innerHTML=data.slice(0,500).map(r=>`<tr><td>${r.empCode||''}</td><td>${r.designation||''}</td><td style="text-align:left;font-weight:600">${r.empName||''}</td><td style="text-align:left">${r.compName||''}</td><td>${r.assignedDate||''}</td><td>${r.prospect||''}</td><td>${r.introduction||''}</td><td>${r.sample||''}</td><td>${r.quotation||''}</td><td>${r.negotiation||''}</td><td>${r.order||''}</td><td>${r.repeatOrder||''}</td><td>${r.givenToCC||''}</td><td>${r.dropped||''}</td></tr>`).join('');
+  }
+  if(data.length>500) tbody.innerHTML+=`<tr><td colspan="14" style="text-align:center;color:#888;font-style:italic;padding:10px">Showing first 500 of ${data.length.toLocaleString()} — use filters to narrow down</td></tr>`;
+
+  // Render KPIs
+  const t=data.length, o=data.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER').length, d=data.filter(l=>l.stage==='DROPPED').length, a=data.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER').length;
+  document.getElementById('leads-kpis').innerHTML=`
+    <div class="kpi-card navy" onclick="openKPIPopupFromList('Total Records (${sourceText})', window._currentLeadsView)">
+      <div class="kpi-label navy">TOTAL RECORDS</div><div class="kpi-value navy">${t.toLocaleString()}</div><div class="kpi-sub navy">Filtered from ${sourceText}</div>
+    </div>
+    <div class="kpi-card green-d" onclick="openKPIPopupFromList('Orders Won (${sourceText})', window._currentLeadsView.filter(l=>l.stage==='ORDER'||l.stage==='REPEAT ORDER'))">
+      <div class="kpi-label green-d">ORDERS WON</div><div class="kpi-value green-d">${o.toLocaleString()}</div><div class="kpi-sub green-d">Conv: ${t>0?(o/t*100).toFixed(1):0}%</div>
+    </div>
+    <div class="kpi-card red-d" onclick="openKPIPopupFromList('Dropped Leads (${sourceText})', window._currentLeadsView.filter(l=>l.stage==='DROPPED'))">
+      <div class="kpi-label red-d">DROPPED</div><div class="kpi-value red-d">${d.toLocaleString()}</div><div class="kpi-sub red-d">Drop: ${t>0?(d/t*100).toFixed(1):0}%</div>
+    </div>
+    <div class="kpi-card orange-m" onclick="openKPIPopupFromList('Active Pipeline (${sourceText})', window._currentLeadsView.filter(l=>l.stage!=='DROPPED'&&l.stage!=='ORDER'&&l.stage!=='REPEAT ORDER'))">
+      <div class="kpi-label orange-m">ACTIVE PIPELINE</div><div class="kpi-value orange-m">${a.toLocaleString()}</div><div class="kpi-sub orange-m">${t>0?(a/t*100).toFixed(1):0}%</div>
+    </div>`;
+
+  document.getElementById('ld-count').textContent=`Showing ${data.length.toLocaleString()} records`;
+  document.getElementById('leads-hdr-count').textContent=`(${data.length.toLocaleString()} records)`;
+
+  // Charts
+  const chartSect=document.getElementById('unified-charts');
+  chartSect.style.display='grid';
+  const sc={}; data.forEach(r=>{sc[r.stage]=(sc[r.stage]||0)+1;});
+  const sL=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]);
+  destroyChart('c-unified-stage');
+  charts['c-unified-stage']=new Chart(document.getElementById('c-unified-stage'),{type:'doughnut',data:{labels:sL,datasets:[{data:sL.map(k=>sc[k]),backgroundColor:sL.map(k=>STAGE_COLORS[k]||'#95a5a6')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}});
+  
+  const trend={};data.forEach(r=>{const ds=r.assignedDate||r.startDate||r.createdOn;const dt=parseDate2(ds);if(dt){const k=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');trend[k]=(trend[k]||0)+1;}});
+  const tK=Object.keys(trend).sort();
+  destroyChart('c-unified-trend');
+  charts['c-unified-trend']=new Chart(document.getElementById('c-unified-trend'),{type:'line',data:{labels:tK.map(k=>{const p=k.split('-');return new Date(p[0],p[1]-1).toLocaleString('en',{month:'short',year:'numeric'});}),datasets:[{label:'Volume',data:tK.map(k=>trend[k]),borderColor:'#2E75B6',backgroundColor:'rgba(46,117,182,0.1)',fill:true,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+}
+function resetLeadFilters(){
+  ['f-leads-src','f-ld-sp','f-ld-stage','f-ld-src','f-ld-state','f-ld-prod'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-leads-src').value='assigned';
+  renderLeadsTable();
+}
+
+// ── CEO REPORT ──
+function renderCEO(){
+  const sheets=Object.keys(ceoData);
+  let html='';
+  sheets.forEach(sname=>{
+    const rows=ceoData[sname];
+    const nonEmpty=rows.filter(r=>r.some(v=>v!==null&&String(v).trim()!=''));
+    html+=`<div class="ceo-section"><h3>${sname}</h3>`;
+    // Detect if it has tabular data (row with multiple non-empty cells)
+    const tableRows=nonEmpty.filter(r=>r.filter(v=>v!==null&&String(v).trim()!='').length>=3);
+    if(tableRows.length>3){
+      // Find header row (first row with 3+ values)
+      const hdrIdx=nonEmpty.findIndex(r=>r.filter(v=>v!==null&&String(v).trim()!='').length>=3);
+      const hdr=nonEmpty[hdrIdx];
+      const dataRows=nonEmpty.slice(hdrIdx+1).filter(r=>r.some(v=>v!==null&&String(v).trim()!=''));
+      html+=`<div class="tbl-wrap" style="max-height:350px"><table><thead><tr>${hdr.filter((_,i)=>hdr[i]!==null&&String(hdr[i]).trim()!='').map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+      const hdrCols=hdr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&String(x.v).trim()!='').map(x=>x.i);
+      html+=dataRows.slice(0,100).map(r=>`<tr>${hdrCols.map(i=>`<td>${r[i]||''}</td>`).join('')}</tr>`).join('');
+      html+=`</tbody></table></div>`;
+    } else {
+      // Render as text blocks
+      nonEmpty.forEach(r=>{
+        const vals=r.filter(v=>v!==null&&String(v).trim()!='');
+        if(vals.length===1){
+          const v=String(vals[0]);
+          if(v.includes('CRITICAL')||v.includes('🚨'))html+=`<div class="alert alert-r">${v}</div>`;
+          else if(v.includes('HIGH')||v.includes('⚠'))html+=`<div class="alert alert-y">${v}</div>`;
+          else if(v.includes('IMMEDIATE'))html+=`<div class="action-card action-imm"><div class="tag" style="color:#C00000">IMMEDIATE</div><div class="act-title">${v}</div></div>`;
+          else if(v.includes('URGENT'))html+=`<div class="action-card action-urg"><div class="tag" style="color:#BF8F00">URGENT</div><div class="act-title">${v}</div></div>`;
+          else if(v.includes('BUILD'))html+=`<div class="action-card action-bld"><div class="tag" style="color:#538135">BUILD</div><div class="act-title">${v}</div></div>`;
+          else if(v.includes('TRANSFORM'))html+=`<div class="action-card action-trn"><div class="tag" style="color:#2E75B6">TRANSFORM</div><div class="act-title">${v}</div></div>`;
+          else html+=`<p style="font-size:11px;padding:3px 0;color:#333">${v}</p>`;
+        } else if(vals.length>=2){
+          html+=`<div class="action-card action-bld" style="margin-bottom:6px"><div class="act-title">${vals[0]}</div><div class="act-detail">${vals.slice(1).join(' — ')}</div></div>`;
+        }
+      });
+    }
+    html+='</div>';
+  });
+  document.getElementById('ceo-content').innerHTML=html;
+}
+
+
+// ═══════════════════════════════════════════════════
+// POPUP SYSTEM
+// ═══════════════════════════════════════════════════
+let popupExportData = [];
+
+function openKPIPopup(type, leads) {
+  leads = leads || window._currentLeads || filteredLeads || assignedLeads;
+  let title, rows;
+  if (type === 'all') {
+    title = 'All Leads (' + leads.length + ')';
+    rows = leads;
+  } else if (type === 'orders') {
+    rows = leads.filter(l => l.stage === 'ORDER' || l.stage === 'REPEAT ORDER');
+    title = 'Orders Won (' + rows.length + ')';
+  } else if (type === 'dropped') {
+    rows = leads.filter(l => l.stage === 'DROPPED');
+    title = 'Dropped Leads (' + rows.length + ') — with Remarks';
+  } else if (type === 'active') {
+    rows = leads.filter(l => l.stage !== 'DROPPED' && l.stage !== 'ORDER' && l.stage !== 'REPEAT ORDER');
+    title = 'Active Pipeline (' + rows.length + ')';
+  } else if (type.startsWith('stage_')) {
+    const stageVal = type.replace('stage_', '');
+    rows = leads.filter(l => l.stage === stageVal);
+    title = stageVal + ' — Stage Leads (' + rows.length + ')';
+  } else if (type === 'stagnant') {
+    var stDays2 = parseInt((document.getElementById('stagnant-days-sel')||{}).value||'60');
+    var stSrc2 = (document.getElementById('stagnant-src-sel')||{}).value||'f1';
+    var srcLbl2 = stSrc2==='f1'?'Assigned Leads':stSrc2==='f2'?'Lead Stage Log':'Customer Log';
+    var today4 = new Date();
+    var ACT_STG = ['PROSPECT','INTRODUCTION','SAMPLE','QUOTATION','NEGOTIATION','NOT TOUCHED','GIVEN TO CC'];
+    if(stSrc2==='f1'){
+      rows = leads.filter(function(l){
+        if(!ACT_STG.includes(l.stage))return false;
+        var ld=parseDateDDMM(l.createdOn);
+        return ld&&(today4-ld)/86400000>=stDays2;
+      });
+    } else {
+      rows = [];
+      var lrData = getFilteredLogData(stSrc2==='f2' ? 'stage' : 'cust');
+      var actKeys=['prospect','introduction','sample','quotation','negotiation'];
+      lrData.forEach(function(r){
+        var dates=[];
+        actKeys.forEach(function(k){
+          var v=r[k]; if(!v||String(v).trim()==='nan')return;
+          var d=stSrc2==='f2'?parseDateDDMM(v):parseDateMMDD(v);
+          if(d&&d.getFullYear()>=2020)dates.push(d);
+        });
+        if(dates.length>0){
+          var last=new Date(Math.max.apply(null,dates));
+          var dy=Math.round((today4-last)/86400000);
+          if(dy>=stDays2)rows.push({empName:r.empName,compName:r.compName,
+            lastStage:actKeys.filter(function(k){var v=r[k];return v&&String(v).trim()&&String(v).trim()!=='nan';}).pop()||'',days:dy});
+        }
+      });
+    }
+    title = 'Stagnant '+stDays2+'+ Days ('+srcLbl2+') — '+rows.length+' records';
+  } else if (type === 'noprogress') {
+    var npSrc2 = (document.getElementById('noprog-src-sel')||{}).value||'f1';
+    var npLbl2 = npSrc2==='f1'?'Assigned Leads':npSrc2==='f2'?'Lead Stage Log':'Customer Log';
+    var today5 = new Date();
+    if(npSrc2==='f1'){
+      rows = leads.filter(function(l){
+        if(l.stage==='ORDER'||l.stage==='REPEAT ORDER')return false;
+        if(l.stageRemarks&&l.stageRemarks.trim()&&l.stageRemarks.trim()!=='undefined')return false;
+        var ld=parseDateDDMM(l.createdOn);
+        return ld&&(today5-ld)/86400000>=7;
+      });
+    } else {
+      var npData = getFilteredLogData(npSrc2==='f2' ? 'stage' : 'cust');
+      var allStgKeys=['prospect','introduction','sample','quotation','negotiation','order','repeatOrder','dropped'];
+      rows = npData.filter(function(r){
+        return !allStgKeys.some(function(k){var v=r[k];return v&&String(v).trim()&&String(v).trim()!=='nan';});
+      }).map(function(r){
+        return {empName:r.empName,compName:r.compName,assignedDate:r.assignedDate||r.startDate||'',status:'No Stage Activity'};
+      });
+    }
+    title = 'No Progress ('+npLbl2+') — '+rows.length+' records';
+  } else {
+    rows = leads;
+    title = type + ' (' + rows.length + ')';
+  }
+  popupExportData = rows;
+  showPopupTable(title, rows, type === 'dropped' || type.startsWith('stage_') || type === 'stagnant');
+}
+
+function showPopupTable(title, rows, showRemarks) {
+  document.getElementById('popup-title').textContent = title;
+  
+  // Enriched rows will have 'id'. If 'id' is missing, use minimal log-style tables.
+  const hasLeadID = rows.length > 0 && rows[0].id !== undefined;
+
+  // Branch for non-enriched, minimal TAT/Log rows (e.g. from Stagnant/No Progress if not enriched)
+  if(!hasLeadID && rows.length > 0 && rows[0].days !== undefined && rows[0].compName !== undefined){
+    var html2='<div style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap"><input class="tbl-search" placeholder="🔍 Search..." oninput="searchPopup(this)" style="min-width:200px;padding:5px 9px;border:1.5px solid #BDD7EE;border-radius:4px;font-size:11px"></div>';
+    html2+='<table id="popup-table"><thead><tr><th>#</th><th onclick="sortPopupTable(this)" style="cursor:pointer">Salesperson ↕</th><th onclick="sortPopupTable(this)" style="cursor:pointer">Company ↕</th><th onclick="sortPopupTable(this)" style="cursor:pointer">Last Stage ↕</th><th onclick="sortPopupTable(this)" style="cursor:pointer">Days Stagnant ↕</th></tr></thead><tbody>';
+    html2+=rows.map(function(r,i){
+      var col=r.days>=90?'#C00000':r.days>=60?'#ED7D31':'#BF8F00';
+      return '<tr><td>'+(i+1)+'</td><td style="text-align:left">'+(r.empName||r.emp||'')+'</td><td style="text-align:left">'+(r.compName||r.company||'')+'</td><td style="text-align:center">'+(r.lastStage||'').toUpperCase()+'</td><td style="font-weight:700;color:'+col+'">'+r.days+'d</td></tr>';
+    }).join('');
+    html2+='</tbody></table>';
+    document.getElementById('popup-body').innerHTML=html2;
+    document.getElementById('popup-ov').classList.add('open');
+    return;
+  }
+  
+  // Branch for non-enriched, minimal "No Progress" rows
+  if(!hasLeadID && rows.length > 0 && rows[0].empName !== undefined && rows[0].id === undefined && rows[0].days === undefined){
+    var html3='<div style="margin-bottom:8px"><input class="tbl-search" placeholder="🔍 Search..." oninput="searchPopup(this)" style="min-width:200px;padding:5px 9px;border:1.5px solid #BDD7EE;border-radius:4px;font-size:11px"></div>';
+    html3+='<table id="popup-table"><thead><tr><th>#</th><th onclick="sortPopupTable(this)" style="cursor:pointer">Salesperson ↕</th><th onclick="sortPopupTable(this)" style="cursor:pointer">Company ↕</th></tr></thead><tbody>';
+    html3+=rows.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td style="text-align:left">'+(r.empName||r.emp||'')+'</td><td style="text-align:left">'+(r.compName||r.company||'')+'</td></tr>';}).join('');
+    html3+='</tbody></table>';
+    document.getElementById('popup-body').innerHTML=html3;
+    document.getElementById('popup-ov').classList.add('open');
+    return;
+  }
+
+  // --- Main Branch: Detail-rich table (matches "All Leads" popup) ---
+  const initialCols = showRemarks
+    ? ['#','ID','Name','Company','State','City','Product','Source','Stage','Salesperson','Remarks']
+    : ['#','ID','Name','Company','State','City','Product','Source','Stage','Salesperson','Created On'];
+  
+  // Dynamically add TAT columns if available
+  const hasTAT = rows.length > 0 && rows[0].days !== undefined;
+  const cols = hasTAT ? [...initialCols, 'From Date', 'To Date', 'Days'] : initialCols;
+
+  let html = `<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+    <input class="tbl-search" placeholder="🔍 Search..." oninput="searchPopup(this)" style="min-width:220px;padding:5px 9px;border:1.5px solid #BDD7EE;border-radius:4px;font-size:11px;font-family:Calibri,Arial,sans-serif">
+    <select id="popup-stage-filter" onchange="filterPopupByStage(this.value)" style="padding:5px 8px;font-size:11px;border:1.5px solid #BDD7EE;border-radius:4px;font-family:Calibri,Arial,sans-serif">
+      <option value="">All Stages</option>
+      ${[...new Set(rows.map(l=>l.stage).filter(Boolean))].sort().map(s=>`<option value="${s}">${s}</option>`).join('')}
+    </select>
+    <span style="font-size:10px;color:#666">${rows.length} records</span>
+  </div>`;
+  
+  html += '<table id="popup-table" style="color:#1a1a2e"><thead><tr>' + cols.map(c => `<th style="cursor:pointer;user-select:none" onclick="sortPopupTable(this)" title="Click to sort">${c} ↕</th>`).join('') + '</tr></thead><tbody>';
+  
+  // Increased limit to 10,000 records to ensure all leads are visible
+  html += rows.slice(0, 10000).map((l, i) => {
+    let rowHTML = `<tr style="color:#1a1a2e; ${hasTAT ? (l.days < 7 ? 'background:#F0FFF4;' : l.days > 90 ? 'background:#FFF0F0;' : '') : ''}">
+      <td style="color:#888">${i+1}</td>
+      <td>${l.id||''}</td>
+      <td style="text-align:left;font-weight:600">${l.name||''}</td>
+      <td style="text-align:left">${l.company||l.compName||''}</td>
+      <td>${l.state||''}</td>
+      <td>${l.city||''}</td>
+      <td style="text-align:left;font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.product||''}">${l.product||''}</td>
+      <td>${l.source||''}</td>
+      <td style="text-align:center"><span style="background:${STAGE_COLORS[l.stage]||'#95a5a6'};color:#fff;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700;white-space:nowrap">${l.stage||''}</span></td>
+      <td style="text-align:left">${l.empName||l.emp||''}</td>
+      <td style="text-align:left;font-size:10px;color:#333;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${showRemarks?(l.stageRemarks||''):(l.createdOn||'')}">${showRemarks?(l.stageRemarks||'—'):(l.createdOn||'')}</td>`;
+    
+    if(hasTAT){
+      rowHTML += `<td>${l.from||''}</td><td>${l.to||''}</td><td style="font-weight:700;color:${l.days < 7 ? '#538135' : l.days > 90 ? '#C00000' : '#1F3864'}">${l.days}d</td>`;
+    }
+    
+    rowHTML += `</tr>`;
+    return rowHTML;
+  }).join('');
+  
+  if (rows.length > 10000) html += `<tr><td colspan="${cols.length}" style="text-align:center;color:#888;padding:8px;font-style:italic">Showing 10,000 of ${rows.length} — download CSV for all</td></tr>`;
+  html += '</tbody></table>';
+  document.getElementById('popup-body').innerHTML = html;
+  document.getElementById('popup-ov').classList.add('open');
+}
+
+function searchPopup(inp) {
+  const s = inp.value.toLowerCase();
+  document.querySelectorAll('#popup-table tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(s) ? '' : 'none';
+  });
+}
+
+function sortPopupTable(th) {
+  const table = th.closest('table');
+  const idx = [...th.parentElement.children].indexOf(th);
+  const asc = th.dataset.asc !== 'true';
+  th.dataset.asc = asc;
+  const rows = [...table.querySelectorAll('tbody tr')];
+  rows.sort((a, b) => {
+    const av = a.cells[idx]?.textContent.trim() || '';
+    const bv = b.cells[idx]?.textContent.trim() || '';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+    return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r => table.querySelector('tbody').appendChild(r));
+}
+
+
+// Open popup from a pre-filtered list
+function openKPIPopupFromList(title, rows, showRemarks) {
+  popupExportData = rows;
+  showPopupTable(title, rows, showRemarks || false);
+}
+
+// Open popup for a specific state/geography
+function openGeoStatePopup(state) {
+  const leads = window._currentLeads || filteredLeads || assignedLeads;
+  const rows = leads.filter(l => l.state === state);
+  const o = rows.filter(l => l.stage === 'ORDER' || l.stage === 'REPEAT ORDER').length;
+  const d = rows.filter(l => l.stage === 'DROPPED').length;
+  const conv = rows.length > 0 ? (o/rows.length*100).toFixed(1) : 0;
+  const dr = rows.length > 0 ? (d/rows.length*100).toFixed(1) : 0;
+  const title = '🗺 ' + state + ' — ' + rows.length + ' leads | Conv: ' + conv + '% | Drop: ' + dr + '%';
+  popupExportData = rows;
+  showPopupTable(title, rows, false);
+}
+
+function closePopup() {
+  document.getElementById('popup-ov').classList.remove('open');
+  document.getElementById('popup-body').innerHTML = '';
+  popupExportData = [];
+}
+
+function filterPopupByStage(val) {
+  document.querySelectorAll('#popup-table tbody tr').forEach(tr => {
+    if (!val) { tr.style.display = ''; return; }
+    const stageCell = tr.querySelector('span');
+    tr.style.display = (stageCell && stageCell.textContent.trim() === val) ? '' : 'none';
+  });
+}
+
+function printPopup() {
+  const title = document.getElementById('popup-title').textContent;
+  const body = document.getElementById('popup-body').innerHTML;
+  printHTML(`<h2>${title}</h2>${body}`);
+}
+
+function exportPopupCSV() {
+  // Use XLSX to export the visible popup table
+  const table = document.getElementById('popup-table');
+  if (table) {
+    const ws = XLSX.utils.table_to_sheet(table);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Export');
+    XLSX.writeFile(wb, 'popup_export.xlsx');
+    return;
+  }
+  if (!popupExportData.length) return;
+  const headers = ['ID','Name','Company','City','State','Product','Source','Stage','Salesperson','Created On','Remarks'];
+  const rows = [headers, ...popupExportData.map(l => [l.id,l.name,l.company||'',l.city||'',l.state||'',l.product||'',l.source||'',l.stage||'',l.empName||'',l.createdOn||'',l.stageRemarks||''])];
+  downloadCSV(rows, 'popup_export');
+}
+
+// Enrichment helper: joins log rows with assignedLeads data for detail-rich popups
+function getStageFromLog(r) {
+  const has = v => v && String(v).trim().toLowerCase() !== 'nan' && String(v).trim() !== '0';
+  if (has(r.order)) return 'ORDER';
+  if (has(r.repeatOrder)) return 'REPEAT ORDER';
+  if (has(r.dropped)) return 'DROPPED';
+  if (has(r.givenCC)) return 'GIVEN TO CC';
+  if (has(r.negotiation)) return 'NEGOTIATION';
+  if (has(r.quotation)) return 'QUOTATION';
+  if (has(r.sample)) return 'SAMPLE';
+  if (has(r.introduction)) return 'INTRODUCTION';
+  if (has(r.prospect)) return 'PROSPECT';
+  return 'NOT TOUCHED';
+}
+
+function getFilteredLogData(source) {
+  let data = (source === 'cust') ? custLogData : (source === 'stage' ? stageLogData : [...stageLogData, ...custLogData]);
+  var repFilter = GF && GF.rep && GF.rep.size > 0 ? GF.rep : null;
+  if (repFilter) data = data.filter(r => repFilter.has(r.empName));
+  var mFilter = document.getElementById('gf-month')?.value;
+  if (mFilter) {
+    data = data.filter(r => {
+      const d = r.assignedDate || r.startDate || r.prospect;
+      return d && String(d).includes(mFilter);
+    });
+  }
+  return data;
+}
+
+function parseStageLog(rows){
+  const hdrs=rows[1].map(h=>String(h).trim().toUpperCase());
+  const idx=k=>hdrs.indexOf(k);
+  return rows.slice(2).filter(r=>r[idx('EMP CODE')]).map(r=>{
+    const obj = {
+      empCode:r[idx('EMP CODE')],designation:String(r[idx('DESIGNATION')]||'').trim(),
+      empName:String(r[idx('EMP NAME')]||'').trim(),compName:String(r[idx('COMP NAME')]||'').trim(),
+      startDate:r[idx('START DATE')],assignedDate:r[idx('ASSIGNED DATE')],
+      prospect:r[idx('PROSPECT')],introduction:r[idx('INTRODUCTION')],
+      sample:r[idx('SAMPLE')],quotation:r[idx('QUOTATION')],
+      negotiation:r[idx('NEGOTIATION')],order:r[idx('ORDER')],
+      repeatOrder:r[idx('REPEAT ORDER')],givenCC:r[idx('GIVEN TO CC')],
+      dropped:r[idx('DROPPED')],
+    };
+    obj.stage = getStageFromLog(obj);
+    return obj;
+  });
+}
+
+// Enrichment helper: joins log rows with assignedLeads data for detail-rich popups
+function enrichLogRows(logRows) {
+  if (!assignedLeads || !assignedLeads.length) return logRows.map(r => ({ ...r, id: '' }));
+  // Index leads by company for fast lookup
+  const leadMap = {};
+  assignedLeads.forEach(l => {
+    const k = (l.company || '').trim().toLowerCase();
+    if (!leadMap[k]) leadMap[k] = [];
+    leadMap[k].push(l);
+  });
+  return logRows.map(r => {
+    const ck = (r.compName || r.company || '').trim().toLowerCase();
+    const matches = leadMap[ck] || [];
+    const rEmp = (r.empName || r.emp || '').trim().toLowerCase();
+    
+    // Strict match by salesperson name
+    let match = matches.find(l => (l.empName || '').trim().toLowerCase() === rEmp);
+    
+    // If exactly one lead for this company, allow matching even if spelling varies slightly (already handled by lowercase+trim)
+    if (!match && matches.length === 1) match = matches[0];
+
+    if (match) {
+      // Merge lead data into log record, BUT prioritize the log's calculated STAGE
+      const merged = { ...match, ...r };
+      if (r.stage) merged.stage = r.stage; 
+      return merged;
+    }
+    return { ...r, id: '' }; // Fallback ensures 'id' key exists for showPopupTable branching
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// TAT CARDS (Overview)
+// ═══════════════════════════════════════════════════
+function renderTATCards() {
+  var logSrc = (document.getElementById('gf-log')||{}).value
+             || (document.getElementById('tat-source')||{}).value || 'both';
+  var tatSrcEl = document.getElementById('tat-source');
+  if (tatSrcEl && tatSrcEl.value !== logSrc) tatSrcEl.value = logSrc;
+  // Use getFilteredLogData which applies rep + month global filters
+  var data = getFilteredLogData(logSrc);
+
+  // For TAT: use assignedDate for lead-stage-log rows (has ASSIGNED DATE)
+  //          use introduction/prospect as "from" for customer-log rows (no ASSIGNED DATE)
+  // Each pair: try primary from-field, then fallback
+  const PAIRS = [
+    {from:'assignedDate', fromFb:'introduction', to:'prospect',     label:'Assigned→Prospect'},
+    {from:'assignedDate', fromFb:'prospect',     to:'introduction', label:'Assigned→Intro'},
+    {from:'assignedDate', fromFb:'introduction', to:'sample',       label:'Assigned→Sample'},
+    {from:'assignedDate', fromFb:'introduction', to:'quotation',    label:'Assigned→Quote'},
+    {from:'assignedDate', fromFb:'introduction', to:'negotiation',  label:'Assigned→Nego'},
+    {from:'assignedDate', fromFb:'introduction', to:'order',        label:'Assigned→Order'},
+    {from:'assignedDate', fromFb:'introduction', to:'dropped',      label:'Assigned→Drop'},
+  ];
+  const cards = PAIRS.map(p => {
+    const diffs = [];
+    data.forEach(r => {
+      // Lead log: assignedDate is DD-MM-YYYY → use parseDateDDMM (same as lead stage format)
+      // Customer log: dates are MM/DD/YYYY → use parseDateMMDD, no assignedDate so use fallback stage
+      var isLeadLog = !!(r.assignedDate && String(r.assignedDate).trim() && String(r.assignedDate).trim()!=='nan');
+      var fromRaw;
+      if(isLeadLog){
+        fromRaw = r[p.from] || r[p.fromFb]; // lead log: use assignedDate, fallback intro
+      } else {
+        // customer log: assignedDate is blank, use startDate (recent ones >= 2020 are valid)
+        fromRaw = r['startDate'] || r[p.fromFb] || r[p.from];
+      }
+      var toRaw = r[p.to];
+      var f = isLeadLog ? parseDateDDMM(fromRaw) : parseDateMMDD(fromRaw);
+      var t = isLeadLog ? parseDateDDMM(toRaw) : parseDateMMDD(toRaw);
+      if (f && t) { var d = Math.round((t - f) / 86400000); if (d >= 0 && d < 3650) diffs.push({d, r}); }
+    });
+    const avg = diffs.length ? (diffs.reduce((s,x) => s + x.d, 0) / diffs.length).toFixed(1) : null;
+    const col = p.to === 'order' ? '#538135' : p.to === 'dropped' ? '#C00000' : '#1F3864';
+    return {p, diffs, avg, col};
+  });
+  
+  // Enrich the data for the "Total Leads" popup so it has all columns
+  window._tatLogData = enrichLogRows(data);
+  
+  var totalLeadsHTML = `
+    <div class="tat-card" onclick="openKPIPopupFromList('Total Leads (${logSrc==='stage'?'Lead Log':'Customer Log'})', window._tatLogData, false)" style="cursor:pointer;background:#f0f7ff;border:1.5 solid #2E75B6">
+      <div class="tc-lbl" style="color:#2E75B6">TOTAL LEADS</div>
+      <div class="tc-val" style="color:#2E75B6">${data.length.toLocaleString()}</div>
+      <div class="tc-sub">Click to view all</div>
+    </div>`;
+
+  document.getElementById('tat-cards').innerHTML = totalLeadsHTML + cards.map(c => `
+    <div class="tat-card" onclick="openTATDrill('${c.p.label}','${c.p.from}','${c.p.to}','${document.getElementById('tat-source')?.value||'both'}')">
+      <div class="tc-lbl">${c.p.label}</div>
+      <div class="tc-val" style="color:${c.col}">${c.avg !== null ? c.avg + 'd' : '—'}</div>
+      <div class="tc-sub">${c.diffs.length} records</div>
+    </div>`).join('');
+}
+
+function openTATDrill(label, fromKey, toKey, source) {
+  let data = getFilteredLogData(source);
+  const rows = [];
+  // Build fallback map for TAT drill
+  const fbMap = {
+    'assignedDate':'introduction','introduction':'prospect','prospect':'assignedDate'
+  };
+  data.forEach(r => {
+    var isLeadLog = !!(r.assignedDate && String(r.assignedDate).trim() && String(r.assignedDate).trim()!=='nan');
+    const fromVal = r[fromKey] || r['startDate'] || r[fbMap[fromKey]||'']; 
+    const toRaw = r[toKey];
+    var f = isLeadLog ? parseDateDDMM(fromVal) : parseDateMMDD(fromVal);
+    var t = isLeadLog ? parseDateDDMM(toRaw) : parseDateMMDD(toRaw);
+    if (f && t) {
+      const d = Math.round((t - f) / 86400000);
+      if (d >= 0 && d < 3650) {
+        // Find lead match to enrich with all columns
+        rows.push({ ...r, from: formatDate(f), to: formatDate(t), days: d });
+      }
+    }
+  });
+  rows.sort((a,b) => a.days - b.days);
+  const enrichedRows = enrichLogRows(rows);
+  popupExportData = enrichedRows;
+  
+  // Update title and show popup
+  document.getElementById('popup-title').textContent = label + ' — ' + rows.length + ' records (avg: ' + (rows.length ? (rows.reduce((s,r) => s+r.days,0)/rows.length).toFixed(1) : '—') + ' days)';
+  showPopupTable(document.getElementById('popup-title').textContent, enrichedRows, false);
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  return d.toLocaleDateString('en-GB', {day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ═══════════════════════════════════════════════════
+// TABLE SEARCH
+// ═══════════════════════════════════════════════════
+function searchTable(inp, tableId) {
+  const s = inp.value.toLowerCase();
+  const tbody = document.querySelector('#' + tableId + ' tbody') || document.getElementById(tableId);
+  if (!tbody) return;
+  const rows = tbody.tagName === 'TBODY' ? [...tbody.rows] : [...tbody.querySelectorAll('tbody tr')];
+  rows.forEach(tr => { tr.style.display = tr.textContent.toLowerCase().includes(s) ? '' : 'none'; });
+}
+
+// Column sort for regular tables
+function sortTableCol(th) {
+  const table = th.closest('table');
+  const idx = [...th.parentElement.children].indexOf(th);
+  const asc = th.dataset.asc !== 'true';
+  th.dataset.asc = asc;
+  [...table.querySelectorAll('thead th')].forEach(t => t.textContent = t.textContent.replace(' ↑','').replace(' ↓',''));
+  th.textContent += asc ? ' ↑' : ' ↓';
+  const rows = [...table.querySelectorAll('tbody tr')];
+  rows.sort((a,b) => {
+    const av = a.cells[idx]?.textContent.trim()||'', bv = b.cells[idx]?.textContent.trim()||'';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+    return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r => table.querySelector('tbody').appendChild(r));
+}
+
+// Make table headers sortable
+function makeTableSortable(tableId) {
+  const table = document.getElementById(tableId)?.closest('table') || document.querySelector('#' + tableId);
+  if (!table) return;
+  table.querySelectorAll('thead th').forEach(th => {
+    th.style.cursor = 'pointer';
+    th.onclick = () => sortTableCol(th);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT / PRINT
+// ═══════════════════════════════════════════════════
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(v => '"' + String(v||'').replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (filename||'export') + '.csv';
+  a.click();
+}
+
+function exportTableCSV(tableId, filename) {
+  const tbody = document.getElementById(tableId);
+  const table = tbody ? tbody.closest('table') : document.querySelector('#' + tableId + ' table');
+  if (!table) { alert('No table found'); return; }
+  const ws = XLSX.utils.table_to_sheet(table);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, filename||'Sheet1');
+  XLSX.writeFile(wb, (filename||'export') + '.xlsx');
+}
+
+function printTableOnly(tableId) {
+  const el = document.getElementById(tableId);
+  const table = el ? el.closest('table') : document.querySelector('#' + tableId + ' table');
+  if (!table) return;
+  printHTML('<h2 style="margin-bottom:12px">' + document.querySelector('[id="'+tableId+'"]')?.closest('.chart-block,.page')?.querySelector('.sec-hdr')?.textContent?.trim() + '</h2>' + table.outerHTML);
+}
+
+function printSection(pageId) {
+  const pg = document.getElementById(pageId);
+  if (!pg) return;
+  printHTML('<h2 style="margin-bottom:12px">Dashboard Export</h2>' + pg.innerHTML);
+}
+
+function printDashboard() {
+  printHTML(document.getElementById('main-content').innerHTML);
+}
+
+function exportAllCSV() {
+  const leads = filteredLeads || assignedLeads;
+  const headers = ['ID','Name','Company','City','State','Product','Source','Stage','Salesperson','Created On','Remarks'];
+  const rows = [headers, ...leads.map(l => [l.id,l.name,l.company,l.city,l.state,l.product,l.source,l.stage,l.empName,l.createdOn,l.stageRemarks])];
+  downloadCSV(rows, 'dashboard_leads_export');
+}
+
+function printHTML(html) {
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Dashboard Export</title>
+    <style>
+      body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#222;padding:16px}
+      table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px}
+      th{background:#1F3864;color:#fff;padding:5px 7px;text-align:left}
+      td{padding:4px 7px;border-bottom:.5px solid #eee}
+      h2{color:#1F3864;font-size:13px;margin-bottom:8px}
+      .btn-export,.tbl-controls,.sec-hdr span{display:none}
+      @media print{button,.btn-export,.tbl-controls{display:none!important}}
+    </style></head><body>${html}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 500);
+}
+
+// ═══════════════════════════════════════════════════
+// MAKE TABLES SORTABLE AFTER RENDER
+// ═══════════════════════════════════════════════════
+const _origRenderTeam = renderTeam;
+renderTeam = function(leads) {
+  _origRenderTeam(leads);
+  setTimeout(() => makeTableSortable('tbl-team'), 100);
+};
+const _origRenderGeo = renderGeo;
+renderGeo = function(leads) {
+  _origRenderGeo(leads);
+  setTimeout(() => makeTableSortable('tbl-geo'), 100);
+};
+const _origRenderProducts = renderProducts;
+renderProducts = function(leads) {
+  _origRenderProducts(leads);
+  setTimeout(() => makeTableSortable('tbl-prod'), 100);
+};
+
+// ── DRILL PANEL HELPERS ──────────────────────────────────
+function searchDrillTable(inp, tbodyId) {
+  const s = inp.value.toLowerCase();
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  [...tbody.rows].forEach(tr => { tr.style.display = tr.textContent.toLowerCase().includes(s) ? '' : 'none'; });
+}
+
+function filterDrillByStage(val, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  [...tbody.rows].forEach(tr => {
+    if (!val) { tr.style.display = ''; return; }
+    const stageEl = tr.querySelector('span.badge') || tr.querySelector('[style*="border-radius"]');
+    const stageText = stageEl ? stageEl.textContent.trim() : '';
+    tr.style.display = stageText === val ? '' : 'none';
+  });
+}
+
+function printDrillPanel() {
+  const panel = document.getElementById('drill-body');
+  const title = document.getElementById('drill-title').textContent;
+  const sub = document.getElementById('drill-subtitle').textContent;
+  printHTML(`<h2>${title}</h2><p style="color:#666;margin-bottom:12px">${sub}</p>${panel.innerHTML}`);
+}
+
+function exportDrillCSV() {
+  const tbody = document.getElementById('drill-leads-tbody');
+  if (!tbody) return;
+  const table = tbody.closest('table');
+  if (!table) return;
+  const ws = XLSX.utils.table_to_sheet(table);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Source_Leads');
+  XLSX.writeFile(wb, 'source_leads_export.xlsx');
+}
+
+function printSpDrill() {
+  const panel = document.getElementById('sp-drill-body');
+  const title = document.getElementById('sp-drill-title').textContent;
+  const sub = document.getElementById('sp-drill-subtitle').textContent;
+  printHTML(`<h2>${title}</h2><p style="color:#666;margin-bottom:12px">${sub}</p>${panel.innerHTML}`);
+}
+
+function exportSpDrillCSV() {
+  const tbody = document.getElementById('sp-leads-tbody');
+  if (!tbody) return;
+  const table = tbody.closest('table');
+  if (!table) return;
+  const ws = XLSX.utils.table_to_sheet(table);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'SP_Leads');
+  XLSX.writeFile(wb, 'sp_leads_export.xlsx');
+}
+
+
+// ── SP DRILL TABLE — data-driven (no slice limit) ──────────────
+function spDrillRender() {
+  var leads = window._spDrillLeads || [];
+  var search = (window._spDrillSearch || '').toLowerCase();
+  var stageF = (document.getElementById('sp-stage-filter') || {}).value || '';
+  var sortCol = window._spDrillSortCol || -1;
+  var sortAsc = window._spDrillSortAsc !== false;
+
+  var filtered = leads.filter(function(l) {
+    if (stageF && l.stage !== stageF) return false;
+    if (search) {
+      var row = [l.id,l.name,l.company,l.state,l.product,l.source,l.stage,l.stageRemarks,l.createdOn].join(' ').toLowerCase();
+      if (!row.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (sortCol >= 0) {
+    var fields = ['id','name','company','state','product','source','stage','stageRemarks','createdOn'];
+    filtered.sort(function(a,b) {
+      var av = String(a[fields[sortCol]]||''), bv = String(b[fields[sortCol]]||'');
+      var an = parseFloat(av), bn = parseFloat(bv);
+      if (!isNaN(an) && !isNaN(bn)) return sortAsc ? an-bn : bn-an;
+      return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+  }
+
+  var countEl = document.getElementById('sp-tbl-count');
+  if (countEl) countEl.textContent = filtered.length + ' / ' + leads.length + ' leads';
+
+  var tbody = document.getElementById('sp-leads-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.map(function(l) {
+    var col = STAGE_COLORS[l.stage] || '#95a5a6';
+    var remarks = (l.stageRemarks || '').substring(0, 60);
+    return '<tr>'
+      + '<td>' + (l.id||'') + '</td>'
+      + '<td style="text-align:left;font-weight:600">' + (l.name||'') + '</td>'
+      + '<td style="text-align:left">' + (l.company||'') + '</td>'
+      + '<td>' + (l.state||'') + '</td>'
+      + '<td style="text-align:left;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (l.product||'') + '">' + (l.product||'') + '</td>'
+      + '<td>' + (l.source||'') + '</td>'
+      + '<td style="text-align:center"><span style="background:'+col+';color:#fff;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700;white-space:nowrap">' + (l.stage||'') + '</span></td>'
+      + '<td style="text-align:left;font-size:10px;color:#555;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (l.stageRemarks||'') + '">' + (remarks||'—') + '</td>'
+      + '<td>' + (l.createdOn||'') + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function spDrillSearch(val) {
+  window._spDrillSearch = val;
+  spDrillRender();
+}
+
+function spDrillSort(th, colIdx) {
+  var asc = window._spDrillSortCol === colIdx ? !window._spDrillSortAsc : true;
+  window._spDrillSortCol = colIdx;
+  window._spDrillSortAsc = asc;
+  var table = document.getElementById('sp-leads-table');
+  if (table) {
+    table.querySelectorAll('thead th').forEach(function(t){ t.textContent = t.textContent.replace(' ↑','').replace(' ↓',''); });
+    th.textContent += asc ? ' ↑' : ' ↓';
+  }
+  spDrillRender();
+}
+
+// ── SOURCE DRILL TABLE — data-driven ──────────────────────────
+function srcDrillRender() {
+  var leads = window._srcDrillLeads || [];
+  var search = (window._srcDrillSearch || '').toLowerCase();
+  var stageF = (document.getElementById('src-stage-filter') || {}).value || '';
+
+  var filtered = leads.filter(function(l) {
+    if (stageF && l.stage !== stageF) return false;
+    if (search) {
+      var row = [l.id,l.name,l.company,l.state,l.city,l.product,l.source,l.stage,l.empName,l.createdOn].join(' ').toLowerCase();
+      if (!row.includes(search)) return false;
+    }
+    return true;
+  });
+
+  var countEl = document.getElementById('src-tbl-count');
+  if (countEl) countEl.textContent = filtered.length + ' / ' + leads.length + ' leads';
+
+  var tbody = document.getElementById('drill-leads-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.map(function(l) {
+    var col = STAGE_COLORS[l.stage] || '#95a5a6';
+    return '<tr>'
+      + '<td>' + (l.id||'') + '</td>'
+      + '<td style="text-align:left;font-weight:600">' + (l.name||'') + '</td>'
+      + '<td style="text-align:left">' + (l.company||'') + '</td>'
+      + '<td>' + (l.state||'') + '</td>'
+      + '<td>' + (l.city||'') + '</td>'
+      + '<td style="text-align:left;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(l.product||'')+'">' + (l.product||'') + '</td>'
+      + '<td style="text-align:center"><span style="background:'+col+';color:#fff;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700;white-space:nowrap">' + (l.stage||'') + '</span></td>'
+      + '<td style="text-align:left">' + (l.empName||'') + '</td>'
+      + '<td>' + (l.createdOn||'') + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+
+// Lightweight re-render of just the KPI cards when stagnant/noprogress selectors change
+function renderOvKpis() {
+  var leads = isFiltered() ? filteredLeads : assignedLeads;
+  window._currentLeads = leads;
+  renderOverview(leads); // full re-render needed to update card counts
+}
+
+// ── CRM API MAPPERS ─────────
+function mapCRMAssigned(input) {
+  let data = (input && Array.isArray(input.Data)) ? input.Data : 
+             (input && Array.isArray(input.Result)) ? input.Result : input;
+  
+  if (!Array.isArray(data) && typeof data === 'object' && data !== null) {
+    const firstArray = Object.values(data).find(v => Array.isArray(v));
+    if (firstArray) data = firstArray;
+  }
+  
+  if (!Array.isArray(data)) {
+    console.warn('mapCRMAssigned: No array found. Input sample:', input);
+    return [];
+  }
+  
+  return data.map(r => ({
+    id: r.LeadAid || r.id,
+    source: r.LeadSource || r.source || 'Unknown',
+    type: r.LeadType || r.type || 'Unknown',
+    queryTime: r.LeadQueryTime || r.queryTime,
+    name: r.LeadPersonName || r.name,
+    contact: r.LeadContactNo || r.contact,
+    email: r.LeadEmail || r.email,
+    company: r.LeadCompany || r.company,
+    city: r.LeadCity || r.city,
+    state: r.LeadState || r.state,
+    product: r.LeadProductName || r.product,
+    remarks: r.LeadRemarks || r.remarks,
+    createdOn: r.LeadCreatedOn || r.createdOn,
+    stage: String(r.Stage || 'NOT TOUCHED').toUpperCase(),
+    stageRemarks: r.Remarks || '',
+    empCode: r.EmpCode,
+    empName: r.EmpName
+  }));
+}
+
+function mapCRMLog(input) {
+  let data = (input && Array.isArray(input.Data)) ? input.Data : 
+             (input && Array.isArray(input.Result)) ? input.Result : input;
+
+  if (!Array.isArray(data) && typeof data === 'object' && data !== null) {
+    const firstArray = Object.values(data).find(v => Array.isArray(v));
+    if (firstArray) data = firstArray;
+  }
+
+  if (!Array.isArray(data)) {
+    console.warn('mapCRMLog: No array found. Input sample:', input);
+    return [];
+  }
+
+  return data.map(r => ({
+    empCode: r.EmpCode || r.empCode,
+    designation: r.Designation || r.designation || '',
+    empName: r.EmpName || r.empName || '',
+    compName: r.CompName || r.LeadCompanyName || r.Comp_Name || '',
+    startDate: r.StartDate || r.AssignedDate || r.startDate,
+    assignedDate: r.AssignedDate || r.StartDate || r.assignedDate,
+    prospect: r.Prospect || r.prospect,
+    introduction: r.Introduction || r.introduction,
+    sample: r.Sample || r.sample,
+    quotation: r.Quotation || r.quotation,
+    negotiation: r.Negotiation || r.negotiation,
+    order: r.Order || r.order,
+    repeatOrder: r.RepeatOrder || r.repeatOrder,
+    givenToCC: r.GivenToCC || r.givenToCC,
+    dropped: r.Dropped || r.dropped
+  }));
+}
+
+// ── CRM LIVE API INTEGRATION ──────────────
+const CRM_API = {
+  baseUrl: 'https://api-crm.rustx.net',
+  token: localStorage.getItem('crm_token') || '',
+
+  async request(endpoint, method = 'GET', body = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    
+    try {
+      const options = { method, headers };
+      if (body) options.body = JSON.stringify(body);
+      
+      const res = await fetch(`${this.baseUrl}${endpoint}`, options);
+      if (res.status === 401) {
+        this.token = '';
+        localStorage.removeItem('crm_token');
+        showLogin();
+        throw new Error('Session expired. Please login again.');
+      }
+      if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+      return await res.json();
+    } catch (e) {
+      console.error('CRM Request Failed:', e);
+      throw e;
+    }
+  },
+
+  async login(Username, Password) {
+    const body = { Username, Password, Latitude: 0, Longitude: 0, Otp: "" };
+    const data = await this.request('/api/Authentication/dologin', 'POST', body);
+    
+    // Based on user feedback, the token is likely in 'TokenKey'
+    const token = data.TokenKey || data.token || data.Token || (data.data && data.data.token) || data.accessToken || (typeof data.Result === 'string' ? data.Result : null);
+    
+    if (token) {
+      this.token = token;
+      localStorage.setItem('crm_token', token);
+      return data;
+    }
+    
+    const receivedKeys = data && typeof data === 'object' ? Object.keys(data).join(', ') : 'None';
+    console.error('Login Response:', data);
+    throw new Error(`Login failed: Token not found. Received keys: ${receivedKeys}`);
+  }
+};
+
+function showLogin() { document.getElementById('login-overlay').style.display = 'flex'; }
+function hideLogin() { document.getElementById('login-overlay').style.display = 'none'; }
+
+async function crmLogin() {
+  const user = document.getElementById('crm-user').value;
+  const pass = document.getElementById('crm-pass').value;
+  const dur = document.getElementById('crm-timeline').value;
+  const err = document.getElementById('login-err');
+  err.innerText = '';
+  
+  if (!user || !pass) { err.innerText = 'Username and password required'; return; }
+  
+  try {
+    const btn = document.querySelector('.btn-login');
+    btn.disabled = true; btn.innerText = 'Connecting...';
+    await CRM_API.login(user, pass);
+    localStorage.setItem('crm_sync_duration', dur);
+    hideLogin();
+    await syncCRMData(dur);
+  } catch (e) {
+    err.innerText = e.message;
+  } finally {
+    const btn = document.querySelector('.btn-login');
+    btn.disabled = false; btn.innerText = 'Connect Now';
+  }
+}
+
+async function syncCRMData(months) {
+  const overlay = document.getElementById('sync-overlay');
+  const msg = document.getElementById('sync-msg');
+  const fill = document.getElementById('sync-fill');
+  
+  overlay.style.display = 'flex';
+  fill.style.width = '5%';
+  
+  try {
+    const dur = months || localStorage.getItem('crm_sync_duration') || '1';
+    const now = new Date();
+    let start;
+    
+    if (dur === '200') { // All Time
+       start = '2010-01-01';
+    } else {
+       start = new Date(now.getFullYear(), now.getMonth() - parseInt(dur), now.getDate()).toISOString().split('T')[0];
+    }
+    const end = now.toISOString().split('T')[0];
+    const payload = { EmpCode: 0, FilterByEmpCode: 0, StartDate: start, EndDate: end };
+
+    // STEP 1/3: Assigned Leads
+    msg.innerText = '📊 [1/3] Fetching Assigned Lead Report...';
+    fill.style.width = '15%';
+    const resA = await CRM_API.request('/api/Lead/getAllAssignedLeads');
+    assignedLeads = mapCRMAssigned(resA);
+    fill.style.width = '35%';
+
+    // STEP 2/3: Stage Logs
+    msg.innerText = '📈 [2/3] Fetching Lead Stage Activity...';
+    const resS = await CRM_API.request('/api/Lead/GetLeadStageLogReport', 'POST', payload);
+    stageLogData = mapCRMLog(resS);
+    fill.style.width = '65%';
+
+    // STEP 3/3: Customer Logs
+    msg.innerText = '🔄 [3/3] Finalizing Customer Stage Logs...';
+    const resC = await CRM_API.request('/api/Reports/GetCustomerStageChangeLog', 'POST', payload);
+    custLogData = mapCRMLog(resC);
+    fill.style.width = '90%';
+
+    document.getElementById('upload-screen').style.display = 'none';
+    document.getElementById('dashboard-banner').style.display = 'flex';
+    document.getElementById('sync-indicator').style.display = 'inline-flex';
+    
+    const counts = `(${assignedLeads.length} Leads, ${stageLogData.length} S-Logs, ${custLogData.length} C-Logs)`;
+    document.getElementById('status-text').innerHTML = `Connected ${counts} • Sync: ${new Date().toLocaleTimeString()} <a href="#" onclick="syncCRMData()" style="color:#BDD7EE;margin-left:8px;text-decoration:none">🔄 Sync Now</a>`;
+    
+    msg.innerText = '🚀 Dashboard Ready!';
+    fill.style.width = '100%';
+    await new Promise(r => setTimeout(r, 600));
+
+    // Final build using common logic
+    buildDashboard();
+  } catch (e) {
+    alert('Sync Failed: ' + e.message);
+  } finally {
+    overlay.style.display = 'none';
+  }
+}
+
+// Check for existing token on load
+window.addEventListener('load', () => {
+  if (CRM_API.token) {
+    document.getElementById('sync-indicator').style.display = 'inline-flex';
+    const savedDur = localStorage.getItem('crm_sync_duration') || '1';
+    syncCRMData(savedDur);
+  }
+});
+
+</script>
+</body>
+</html>
