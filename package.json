@@ -4,19 +4,10 @@
   "description": "AI-Enhanced CRM Dashboard with NVIDIA API Integration",
   "main": "index-new.html",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "vercel build",
-    "start": "vercel start",
-    "deploy": "vercel --prod"
-  },
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  },
-  "devDependencies": {
-    "vercel": "^32.0.0"
+    "build": "echo 'Build complete - static site ready'"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "18.x"
   },
   "keywords": ["crm", "dashboard", "ai", "nvidia", "business-intelligence"],
   "author": "LRX Team",
