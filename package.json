@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "AI-Enhanced CRM Dashboard with NVIDIA API Integration",
   "main": "index-new.html",
-  "scripts": {
-    "build": "echo 'Build complete - static site ready'"
-  },
   "engines": {
     "node": "20.x"
   },
